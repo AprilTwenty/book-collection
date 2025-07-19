@@ -11,7 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^6.11.1",
+    "@prisma/client": "^6.12.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
@@ -23,7 +23,7 @@
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
-    "prisma": "^6.11.1"
+    "prisma": "^6.12.0"
   },
   "description": "ขั้นตอนการติดตั้ง 1 สร้าง database ชื่อ book_collection ใช้ sql-statment จากไฟล์ sql-statment.txt ใส่ใน pgadmin เพื่อสร้างตารางและข้อมูลตัวอย่าง 2 clone จาก github https://github.com/AprilTwenty/book-collection.git 3 ติดตั้ง npm ที่ต้องใช้ npm express nodemon bcrypt jsonwebtoken dotenv prisma (pg //ไม่ใช้แล้ว เปลี่ยนมาใช้ prismaORM แต่อาจติดตั้งไว้ ใช้ทดสอบง่ายกว่า)     ติดตั้งตามนี้"
 }
