@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { postBookValidation, validateQuery } from "../middleware/validateData.js";
-import prisma from "../app.js";
+import { prisma } from "../app.js";
 
 const routerBooks = Router();
 

@@ -12,7 +12,7 @@ import routerUserProfile from "./routes/user-profile.js";
 import swaggerSetup from "./swagger.js";
 import cors from "cors";
 
-const prisma = new PrismaClient();
+export const prisma = new PrismaClient();
 
 
 async function init() {
@@ -39,4 +39,3 @@ async function init() {
 }
 
 init();
-export default prisma;

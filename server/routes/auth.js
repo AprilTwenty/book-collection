@@ -2,7 +2,7 @@ import { Router } from "express";
 import { loginValidation, postUserValidation } from "../middleware/validateData.js"
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import prisma from "../app.js";
+import { prisma } from "../app.js";
 
 const routerAuth = Router();
 
@@ -93,6 +93,7 @@ routerAuth.post("/login", loginValidation, async (req, res) => {
             token
         });
     } catch (error) {
+        console.error(error)
         return res.status(500).json({
             "success": false,
             "message": "internal server error. Please try again later"
