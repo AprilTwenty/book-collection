@@ -2,9 +2,13 @@ import { Router } from "express";
 import { loginValidation, postUserValidation } from "../middleware/validateData.js"
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { prisma } from "../app.js";
+import { prisma } from "../prisma.js";
 
 const routerAuth = Router();
+
+if (!process.env.SECRET_KEY) {
+    throw new Error("Environment variable SECRET_KEY is not defined");
+}
 
 routerAuth.post("/register", postUserValidation, async (req, res) => {
     //1 access request
@@ -48,6 +52,7 @@ routerAuth.post("/register", postUserValidation, async (req, res) => {
             "data": result
         });
     } catch (error) {
+        console.log(error)
         return res.status(500).json({
             "success": false,
             "message": "Internal server error. Please try again later"
@@ -93,6 +98,7 @@ routerAuth.post("/login", loginValidation, async (req, res) => {
             token
         });
     } catch (error) {
+        console.log(error)
         return res.status(500).json({
             "success": false,
             "message": "internal server error. Please try again later"

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { prisma } from "../app.js";
+import { prisma } from "../prisma.js";
 import { userIdBodyValidation, validateId, validateQuery, userIdQueryValidation, nameBodyValidation, descriptionBodyValidation } from "../middleware/validateData.js"
 import { protect } from "../middleware/protect.js"
 

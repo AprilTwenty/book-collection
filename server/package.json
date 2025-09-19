@@ -1,18 +1,20 @@
 {
-  "name": "server",
+  "name": "book-collection",
+  "description": "A collection of books with server and client functionality.",
+  "private": true,
   "version": "1.0.0",
   "type": "module",
-  "main": "app.js",
-  "scripts": {
-    "start": "nodemon app.js",
-    "postinstall": "npx prisma generate --schema=./prisma/schema.prisma",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "main": "./main.js",
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "scripts": {
+    "start": "node ./main.js",
+    "postinstall": "npx prisma generate --no-engine && npx prisma db push"
+  },
   "dependencies": {
     "@prisma/client": "^6.12.0",
+    "@prisma/extension-accelerate": "^2.0.2",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
@@ -20,12 +22,11 @@
     "jsonwebtoken": "^9.0.2",
     "nodemon": "^3.1.10",
     "pg": "^8.16.3",
+    "prisma": "^6.12.0",
     "serverless-http": "^3.2.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
-    "prisma": "^6.12.0"
-  },
-  "description": "ขั้นตอนการติดตั้ง 1 สร้าง database ชื่อ book_collection ใช้ sql-statment จากไฟล์ sql-statment.txt ใส่ใน pgadmin เพื่อสร้างตารางและข้อมูลตัวอย่าง 2 clone จาก github https://github.com/AprilTwenty/book-collection.git 3 ติดตั้ง npm ที่ต้องใช้ npm express nodemon bcrypt jsonwebtoken dotenv prisma (pg //ไม่ใช้แล้ว เปลี่ยนมาใช้ prismaORM แต่อาจติดตั้งไว้ ใช้ทดสอบง่ายกว่า)     ติดตั้งตามนี้"
+  }
 }

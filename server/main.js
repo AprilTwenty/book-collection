@@ -1,5 +1,4 @@
 import express from "express";
-import { PrismaClient } from "@prisma/client";
 import routerBooks from "./routes/books.js";
 import routerAuthors from "./routes/authors.js";
 import routerCategories from "./routes/categories.js";
@@ -11,14 +10,7 @@ import routerCustomCollections from "./routes/custom-collections.js";
 import routerUserProfile from "./routes/user-profile.js";
 import swaggerSetup from "./swagger.js";
 import cors from "cors";
-
-let prisma;
-if (global.prisma) {
-  prisma = global.prisma;
-} else {
-  prisma = new PrismaClient();
-  global.prisma = prisma;
-}
+import path from "path";
 
 const app = express();
 const PORT = 4000;
@@ -35,19 +27,18 @@ app.use("/userbooks", routerUserBooks);
 app.use("/customcollections", routerCustomCollections);
 app.use("/userprofile", routerUserProfile);
 
+// Serve static files from the Vite build output
+app.use(express.static("./dist"));
+
+// Catch-all route to serve the index.html for SPA (must be after API routes)
+app.get("/", (req, res) => {
+    res.sendFile(path.join("./dist", "index.html"));
+});
+
 swaggerSetup(app); // เปิดใช้งาน Swagger UI
 
-
-/* ปิดเพื่อ deploy ขึ้น vercel ไม่สามารถใช้ listen ได้
 app.listen(PORT, () => {
-    console.log("server is running on port " + PORT);
+    console.log(`Server is running on port http://localhost:${PORT}`);
 });
-*/
-
-if (import.meta.url === `file://${process.argv[1]}`) {
-    app.listen(4000, () => {
-        console.log('server is running on port 4000')
-    })
-}
 
 export default app;
