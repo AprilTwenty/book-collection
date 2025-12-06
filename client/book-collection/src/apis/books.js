@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const base_url = "https://book-collection-psi.vercel.app";
+const base_url = import.meta.resolve.env.VITE_API_URL;
 const endPoint = base_url + "/books"
 export async function getBooks (clientData) {
     try {
