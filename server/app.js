@@ -1,5 +1,4 @@
 import express from "express";
-import { PrismaClient } from "@prisma/client";
 import routerBooks from "./routes/books.js";
 import routerAuthors from "./routes/authors.js";
 import routerCategories from "./routes/categories.js";
@@ -11,15 +10,9 @@ import routerCustomCollections from "./routes/custom-collections.js";
 import routerUserProfile from "./routes/user-profile.js";
 import swaggerSetup from "./swagger.js";
 import cors from "cors";
+import dotenv from 'dotenv';
 
-let prisma;
-if (global.prisma) {
-  prisma = global.prisma;
-} else {
-  prisma = new PrismaClient();
-  global.prisma = prisma;
-}
-
+dotenv.config();
 const app = express();
 const PORT = 4000;
 
@@ -37,6 +30,14 @@ app.use("/userprofile", routerUserProfile);
 
 swaggerSetup(app); // เปิดใช้งาน Swagger UI
 
+app.get('/', (req, res) => {
+  res.json(
+    {
+      success: true,
+      message: 'API Running'
+    }
+  );
+});
 
 /* ปิดเพื่อ deploy ขึ้น vercel ไม่สามารถใช้ listen ได้
 app.listen(PORT, () => {
@@ -44,10 +45,5 @@ app.listen(PORT, () => {
 });
 */
 
-if (import.meta.url === `file://${process.argv[1]}`) {
-    app.listen(4000, () => {
-        console.log('server is running on port 4000')
-    })
-}
 
 export default app;
