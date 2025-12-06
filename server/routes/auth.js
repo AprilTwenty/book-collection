@@ -2,7 +2,7 @@ import { Router } from "express";
 import { loginValidation, postUserValidation } from "../middleware/validateData.js"
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { prisma } from "../app.js";
+import prisma from "../prisma/client.js";
 
 const routerAuth = Router();
 
