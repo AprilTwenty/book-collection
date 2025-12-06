@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const base_url = "http://localhost:4000";
+const base_url = import.meta.env.VITE_API_URL;
 const endPoint = base_url + "/auth/login";
 
 export async function login(clientData) {
