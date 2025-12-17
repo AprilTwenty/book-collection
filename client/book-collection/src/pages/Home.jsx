@@ -2,7 +2,7 @@ import "./css/Home.css";
 import heroImgBack from "../images/homepage/a-book-2304389_1280.jpg";
 import heroImgFront from "../images/homepage/library-488690_1280.jpg"
 import { getBooks } from "../apis/books";
-import BookSlider from "../components/SliderBooks";
+import BookSlider from "../components/SliderBooks.jsx";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 

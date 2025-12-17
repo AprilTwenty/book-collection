@@ -50,17 +50,52 @@
     flex-direction: row;
     justify-content: center;
     align-items: center;
-     background-color: rgba(129, 209, 196, 0.664);
+    background-color: rgba(129, 209, 196, 0.664);
     z-index: 2;
 }
 
 .slider-box {
-    height: 300px;
-    width: 90%;
-}
-.info-card img {
-    height: 270px;
     width: 100%;
-    border-radius: 10px;
+    position: relative;
+    overflow: visible;
+    padding: 10px;
 }
 
+.book-slider {
+  width: 100%;
+  height: 100%;
+}
+
+.swiper {
+  width: 100%;
+  height: 100%;
+  padding-bottom: 40px !important;
+}
+
+.swiper-slide {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* content ในแต่ละ slide */
+.slide-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.slide-item img {
+  height: 270px;
+  width: auto;
+  max-width: 100%;
+  display: block;
+  border-radius: 10px;
+  margin: 0 auto;
+}
+
+.book-title {
+  margin-top: 8px;
+  font-size: 14px;
+}
