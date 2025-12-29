@@ -1,0 +1,171 @@
+.header-nav {
+    display: flex;
+    width: 95%;
+    height: 60px;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    border-radius: 50px;
+    margin: 10px auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.nav-menu {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+.nav-logo img {
+    width: 35px;
+    height: 35px;
+}
+
+.nav-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    justify-content: center;
+}
+.nav-login {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    background-color: white;
+    padding: 3px;
+    border-radius: 50px;
+}
+
+
+.nav-auth {
+  background: #ffffff;
+  color: #1f2937;
+  font-weight: 500;
+  padding: 6px 16px;
+  border-radius: 999px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+.nav-auth:hover {
+  background: #1f2937;
+  color: #ffffff;
+}
+
+.nav-profile {
+  position: relative;
+  display: flex;
+
+}
+
+.nav-profile-btn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 50%;
+}
+.nav-profile-btn:focus-visible .nav-profile-img,
+.nav-profile-btn:hover .nav-profile-img {
+  box-shadow:
+    0 0 0 2px #ffffff,
+    0 0 0 4px #1f2937;
+}
+
+.nav-profile-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #1f2937;
+}
+/* กล่อง dropdown */
+.profile-dropdown {
+  position: absolute;
+  top: 52px;
+  right: 0;
+  min-width: 160px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  padding: 6px;
+  z-index: 1000;
+}
+
+/* รายการใน dropdown */
+.profile-dropdown__item {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #1f2937;
+  font-size: 14px;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+}
+
+/* hover / focus */
+.profile-dropdown__item:hover,
+.profile-dropdown__item:focus-visible {
+  background: #f3f4f6;
+  outline: none;
+}
+
+/* ปุ่ม logout */
+.profile-dropdown__item.logout {
+  color: #b91c1c;
+  font-weight: 500;
+}
+
+.nav-search {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border-radius: 999px;
+  padding: 4px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  margin-right: 20px;
+}
+
+.nav-search__input {
+  border: none;
+  outline: none;
+  padding: 8px 12px;
+  font-size: 14px;
+  border-radius: 999px;
+  width: 160px;
+}
+
+.nav-search__input::placeholder {
+  color: #aaa;
+}
+
+.nav-search__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #1f2937;
+  color: white;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.nav-search__btn:hover {
+  background: #43a047;
+}
+
+.nav-search:focus-within {
+  box-shadow:
+    0 0 0 2px #ffffff,
+    0 0 0 4px #1f2937;
+}

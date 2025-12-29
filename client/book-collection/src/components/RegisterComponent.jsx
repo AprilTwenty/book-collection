@@ -44,7 +44,7 @@ function RegisterComponent() {
 
     return (
         
-        <div className="content-contrainer">
+        <div className="content-container">
             <h1>Register</h1>
             {error && error != "รหัสผ่านไม่ตรงกัน" && <div className="error-message">*{error}</div>}
             {success && <div className="success-message">ลงทะเบียนสำเร็จ กรุณาเข้าสู่ระบบ</div>}
