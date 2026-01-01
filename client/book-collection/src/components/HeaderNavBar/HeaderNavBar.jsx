@@ -76,7 +76,7 @@ function HeaderNavBar() {
                         aria-haspopup="true"
                         aria-expanded={isProfileOpen}
                     >
-                        <div className="nav-profile-img"></div>
+                        <img className="nav-profile-img" src="/default-avatar-image.png"alt="profile" />
                     </button>
                     {isProfileOpen && (
                         <div className="profile-dropdown">
