@@ -22,13 +22,13 @@ routerAuth.post("/register", postUserValidation, async (req, res) => {
                 updated_at: new Date()
             }
         };
-        const collision = await prisma.users.findUnique({
+        const collisionUser = await prisma.users.findUnique({
             where: { username }
         });
-        if (collision) {
+        if (collisionUser) {
             return res.status(409).json({
                 "success": false,
-                "message": "ชื่อ username " + collision.username + " มีอยู่ในระบบแล้ว"
+                "message": "ชื่อ username " + collisionUser.username + " มีอยู่ในระบบแล้ว"
             });
         }
         const collisionEmail = await prisma.users.findUnique({
@@ -40,7 +40,18 @@ routerAuth.post("/register", postUserValidation, async (req, res) => {
                 "message": "ชื่อ email " + collisionEmail.email + " มีอยู่ในระบบแล้ว"
             });
         }
-        const result = await prisma.users.create(createUser);
+        // const result = await prisma.users.create(createUser); //old version not create user_profile
+        const result = await prisma.$transaction(async (tx) => {
+            const user = await tx.users.create(createUser);
+            await tx.user_profile.create({
+                data: {
+                user_id: user.user_id,
+                avatar_url: "/default-avatar.png"
+                }
+            });
+            return user;
+        });
+        
         //3 response
         return res.status(201).json({
             "success": true,
@@ -53,7 +64,7 @@ routerAuth.post("/register", postUserValidation, async (req, res) => {
             "message": "Internal server error. Please try again later"
         });
     }
-});
+}); 
 routerAuth.post("/login", loginValidation, async (req, res) => {
     //1 access request
     const { username, password } = req.body;
