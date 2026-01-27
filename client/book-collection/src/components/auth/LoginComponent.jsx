@@ -1,9 +1,9 @@
-import { login as loginApi } from "../apis/login";
+import { login as loginApi } from "../../api/login";
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from "react-router-dom";
 import { Link } from "react-router-dom";
 import "./css/ContentComponent.css";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 
 
 function LoginComponent() {

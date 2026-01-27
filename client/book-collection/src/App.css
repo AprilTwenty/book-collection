@@ -7,3 +7,20 @@ body {
   font-family: 'Inter', sans-serif;
   color: #333;
 }
+.app-wrapper {
+  max-width: 1200px;   /* หรือ 1100px / 1280px แล้วแต่ชอบ */
+  margin: 0 auto;
+  position: relative; /* สำคัญมาก */
+  padding: 20px;
+}
+.app-wrapper::before {
+  content: "";
+  position: absolute;
+  top: -20px;
+  right: 0;
+  width: 40%;
+  height: 240px;
+  background: linear-gradient(135deg, #4CAF50, #81C784);
+  border-bottom-left-radius: 180px;
+  z-index: -1;
+}

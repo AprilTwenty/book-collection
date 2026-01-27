@@ -7,7 +7,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
-import noImg from "./images/No_Image_Available.jpg";
+import noImg from "/No_Image_Available.jpg";
 
 function BookSlider({ books }) {
   if (!books || books.length === 0) {

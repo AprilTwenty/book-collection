@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import './HeaderNavBar.css'
 import { useEffect, useRef } from 'react';
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../../context/AuthContext";
 
 
 function HeaderNavBar() {
@@ -76,8 +76,11 @@ function HeaderNavBar() {
                         aria-haspopup="true"
                         aria-expanded={isProfileOpen}
                     >
-                        <img className="nav-profile-img" src="/default-avatar-image.png"alt="profile" />
-                    </button>
+                        <img className="nav-profile-img"
+                            src={user?.avatar || "/avatar-default.png"}
+                            alt="profile"
+                        />
+                   </button>
                     {isProfileOpen && (
                         <div className="profile-dropdown">
                             <Link to="/profile" className="profile-dropdown__item">

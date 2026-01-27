@@ -1,9 +1,9 @@
 import axios from 'axios';
 import React, { useState, useEffect } from 'react';
-import { getBooks } from '../apis/books';
-import './css/BookInfo.css'
+import { getBooks } from '../../../api/books';
+import './BookInfo.css'
 import { useParams } from 'react-router-dom';
-import noImg from "../images/No_Image_Available.jpg";
+import noImg from "/No_Image_Available.jpg";
 import { Link } from "react-router-dom";
 
 function BookInfo() {

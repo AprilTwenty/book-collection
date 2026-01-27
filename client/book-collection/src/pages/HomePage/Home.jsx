@@ -1,8 +1,8 @@
-import "./css/Home.css";
-import heroImgBack from "../images/homepage/a-book-2304389_1280.jpg";
-import heroImgFront from "../images/homepage/library-488690_1280.jpg"
-import { getBooks } from "../apis/books";
-import BookSlider from "../components/SliderBooks.jsx";
+import "./Home.css";
+import heroImgBack from "../../assets/images/homepage/a-book-2304389_1280.jpg";
+import heroImgFront from "../../assets/images/homepage/library-488690_1280.jpg"
+import { getBooks } from "../../api/books.js";
+import BookSlider from "../../components/layout/SliderBook/SliderBooks.jsx";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 

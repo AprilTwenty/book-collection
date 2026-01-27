@@ -99,3 +99,11 @@
   margin-top: 8px;
   font-size: 14px;
 }
+
+@media (max-width: 768px) {
+  .hero-section {
+    flex-direction: column;
+    align-items: center;
+    height: 800px;
+  }
+}

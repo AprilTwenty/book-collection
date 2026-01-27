@@ -2,7 +2,7 @@
   position: absolute;
   top: 0;
   right: 0;
-  width: 500px; /* ปรับตามขนาดที่ต้องการ */
+  width: 40%; /* ปรับตามขนาดที่ต้องการ */
   height: 250px;
   background-color: #4CAF50; /* เขียวแบบสดใส */
   border-bottom-left-radius: 120px;

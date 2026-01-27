@@ -1,5 +1,5 @@
-import BookInfo from '../components/BookInfoComponent';
-import './css/BookInfoPage.css'
+import BookInfo from '../../components/book/BookInfoComponent/BookInfoComponent.jsx';
+import './BookInfoPage.css'
 
 function BookInfoPage() {
     
