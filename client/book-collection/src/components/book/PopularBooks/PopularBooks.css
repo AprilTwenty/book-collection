@@ -1,0 +1,13 @@
+.popular-section {
+  margin-top: 60px;
+}
+
+.popular-section h2 {
+  margin-bottom: 20px;
+}
+
+.book-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 20px;
+}
