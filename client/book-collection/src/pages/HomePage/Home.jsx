@@ -1,7 +1,7 @@
 import "./Home.css";
 import heroImgBack from "../../assets/images/homepage/a-book-2304389_1280.jpg";
 import heroImgFront from "../../assets/images/homepage/library-488690_1280.jpg";
-import { getBooks } from "../../api/books.js";
+import { getBooks, getLatestBooks } from "../../api/books.js";
 import BookSlider from "../../components/layout/SliderBook/SliderBooks.jsx";
 import PopularBooks from "../../components/book/PopularBooks/PopularBooks.jsx";
 import React, { useEffect, useState } from "react";
@@ -9,46 +9,44 @@ import React, { useEffect, useState } from "react";
 function HomePage() {
 
   const [books, setBooks] = useState([]);
-  const [ popularBook, setPopularBook ] = useState([]);
+  const [ popularBooks, setPopularBooks ] = useState([]);
+  const [ latestBooks, setLatestBooks ] = useState([]);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    async function fetchBook() {
-      try {
-        const clientData = {
-          params: "",
-          query: "?page=1&&limit=10"
-        };
+useEffect(() => {
+  async function fetchBook() {
+    try {
+      const latestRes = await getLatestBooks(10);
+      const response = await getBooks("?page=1&limit=10");
 
-        const response = await getBooks(clientData);
-
-        const popularClientData = {
-          params: "",
-          query: "?sort=rating&order=desc&&page=1&&limit=5"
-        };
-
-        const popularRes = await getBooks(popularClientData);
-
-        if (response.data && response.data.success) {
-          setBooks(response.data.data);
-        } else {
-          setError("รูปแบบข้อมูลไม่ถูกต้อง");
-        }
-
-        if (response.data && response.data.success) {
-          setPopularBook(popularRes.data.data);
-        } else {
-          setError("รูปแบบข้อมูลไม่ถูกต้อง");
-        }
-
-      } catch (error) {
-        console.error(error);
-        setError("เกิดข้อผิดพลาดในการโหลดข้อมูล");
+      const popularRes = await getBooks(
+        "?sort=rating&order=desc&page=1&limit=5"
+      );
+      if (latestRes.data?.success) {
+        setLatestBooks(latestRes.data.data);
+      } else {
+        setError("รูปแบบข้อมูลไม่ถูกต้อง");
       }
-    }
+      if (response.data?.success) {
+        setBooks(response.data.data);
+      } else {
+        setError("รูปแบบข้อมูลไม่ถูกต้อง");
+      }
 
-    fetchBook();
-  }, []);
+      if (popularRes.data?.success) {
+        setPopularBooks(popularRes.data.data);
+      } else {
+        setError("รูปแบบข้อมูลไม่ถูกต้อง");
+      }
+
+    } catch (error) {
+      console.error(error);
+      setError("เกิดข้อผิดพลาดในการโหลดข้อมูล");
+    }
+  }
+
+  fetchBook();
+}, []);
 
   return (
     <main className="home-page">
@@ -70,14 +68,14 @@ function HomePage() {
 
         <div className="info-card">
           <div className="slider-box">
-            <BookSlider books={books} />
+            <BookSlider books={latestBooks} />
           </div>
         </div>
       </section>
 
       {/* POPULAR BOOKS SECTION */}
       <section className="popular-section">
-        <PopularBooks books={popularBook} />
+        <PopularBooks books={popularBooks} />
       </section>
 
     </main>
