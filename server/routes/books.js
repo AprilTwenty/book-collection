@@ -4,6 +4,39 @@ import prisma from "../prisma/client.js";
 
 const routerBooks = Router();
 
+routerBooks.get("/latest", async (req, res) => {
+    //1 access req
+    let limit = Number(req.query.limit) || 10;
+    if (limit < 1) limit = 1;
+    if (limit > 50) limit = 50;
+    //2 sql section
+    const latestQuery = {
+            orderBy: {
+                created_at: "desc"
+            },
+            select: {
+                book_id: true,
+                title: true,
+                cover_url: true
+            },
+            take: limit
+        }
+    try {
+        const result = await prisma.books.findMany(latestQuery);
+        //3 respone section
+        return res.status(200).json({
+            "success": true,
+            "data": result
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            "success": false,
+            "message": "Internal server error. Please try again later."
+        });
+    }
+});
+
 routerBooks.get("/:bookId", async (req, res) => {
     //1 access body and req
     const bookIdFromClient = req.params.bookId;
@@ -379,37 +412,5 @@ routerBooks.delete("/:bookId", async (req, res) => {
                 "message": " Internal server error. Please try again later"
             })
         }
-});
-routerBooks.get("/latest", async (req, res) => {
-    //1 access req
-    const limit = Number(req.query.limit) || 10;
-    if (limit < 1) limit = 1;
-    if (limit > 50) limit = 50;
-    //2 sql section
-    const latestQuery = {
-            orderBy: {
-                created_at: "desc"
-            },
-            select: {
-                id: true,
-                title: true,
-                cover_url: true
-            },
-            take: limit
-        }
-    try {
-        const result = await prisma.books.findMany(latestQuery);
-        //3 respone section
-        return res.status(200).json({
-            "success": true,
-            "data": result
-        });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            "success": false,
-            "message": "Internal server error. Please try again later."
-        });
-    }
 });
 export default routerBooks;
