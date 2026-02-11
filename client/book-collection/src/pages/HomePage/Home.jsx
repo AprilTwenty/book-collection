@@ -4,6 +4,7 @@ import heroImgFront from "../../assets/images/homepage/library-488690_1280.jpg";
 import { getBooks, getLatestBooks } from "../../api/books.js";
 import BookSlider from "../../components/layout/SliderBook/SliderBooks.jsx";
 import PopularBooks from "../../components/book/PopularBooks/PopularBooks.jsx";
+import BookCard from "../../components/book/BookCard/BookCard.jsx";
 import React, { useEffect, useState } from "react";
 
 function HomePage() {
@@ -11,7 +12,11 @@ function HomePage() {
   const [books, setBooks] = useState([]);
   const [ popularBooks, setPopularBooks ] = useState([]);
   const [ latestBooks, setLatestBooks ] = useState([]);
+  const [allBooks, setAllBooks] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [error, setError] = useState(null);
+
 
 useEffect(() => {
   async function fetchBook() {
@@ -26,6 +31,10 @@ useEffect(() => {
         order: "desc",
         page: 1,
         limit: 5
+      });
+      const allRes = await getBooks({
+        page: currentPage,
+        limit: 12
       });
 
       if (latestRes.data?.success) {
@@ -44,6 +53,13 @@ useEffect(() => {
       } else {
         setError("รูปแบบข้อมูลไม่ถูกต้อง");
       }
+      if (allRes.data?.success) {
+        const total = allRes.data.total ?? allRes.data.data.length;
+        console.log("ALL RES:", allRes.data);
+
+        setAllBooks(allRes.data.data);
+        setTotalPages(Math.ceil(total / 12));
+      }
 
     } catch (error) {
       console.error(error);
@@ -52,7 +68,7 @@ useEffect(() => {
   }
 
   fetchBook();
-}, []);
+}, [currentPage]);
 
   return (
     <main className="home-page">
@@ -82,6 +98,30 @@ useEffect(() => {
       {/* POPULAR BOOKS SECTION */}
       <section className="popular-section">
         <PopularBooks books={books} />
+      </section>
+
+      {/* ALL BOOKS SECTION */}
+      <section className="all-books-section">
+        <h2>All Books</h2>
+
+        <div className="book-grid">
+          {allBooks.map(book => (
+            <BookCard key={book.book_id} book={book} />
+          ))}
+        </div>
+
+        {/* Pagination */}
+        <div className="pagination">
+          {Array.from({ length: totalPages }, (_, index) => (
+            <button
+              key={index}
+              className={currentPage === index + 1 ? "active-page" : ""}
+              onClick={() => setCurrentPage(index + 1)}
+            >
+              {index + 1}
+            </button>
+          ))}
+        </div>
       </section>
 
     </main>

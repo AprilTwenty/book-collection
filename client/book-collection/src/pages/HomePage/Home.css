@@ -110,6 +110,26 @@
   margin-top: 20px;
 }
 
+.pagination {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.pagination button {
+  padding: 6px 12px;
+  border: none;
+  background: #ddd;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.pagination button.active-page {
+  background: #4caf50;
+  color: white;
+}
+
 @media (max-width: 768px) {
   .hero-section {
     flex-direction: column;

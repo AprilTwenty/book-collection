@@ -92,7 +92,15 @@ routerBooks.get("/:bookId", async (req, res) => {
 });
 routerBooks.get("/", validateQuery, async(req, res) => {
     //1 access req
-    const { name, category, author, page, limit } = req.query;
+    const { name, category, author, page, limit, sort, order } = req.query;
+    const allowedSortFields = [
+      "title",
+      "published_year",
+      "created_at",
+      "rating"
+    ];
+    const safeSort = allowedSortFields.includes(sort) ? sort : "created_at";
+    const safeOrder = order === "asc" ? "asc" : "desc";
     let filters = {};
     if (name) {
         filters.title = { contains: name, mode: "insensitive" }
@@ -111,22 +119,45 @@ routerBooks.get("/", validateQuery, async(req, res) => {
             }
         }
     }
-    let queryOption = { where: filters };
+    let queryOption = { 
+        where: filters,
+        orderBy: {} 
+    };
     if (page !== undefined && limit !== undefined) {
         const pageInt = parseInt(page, 10);
         const limitInt = parseInt(limit, 10);
         queryOption.skip = (pageInt -1) * limitInt;
         queryOption.take = limitInt;
     }
+    if (safeSort !== "rating") {
+      queryOption.orderBy[safeSort] = safeOrder;
+    }
+    if (safeSort === "rating") {
+      queryOption.orderBy = {
+        reviews: {
+          _avg: {
+            rating: safeOrder
+          }
+        }
+      };
+    }
     //2 sql
     try {
         queryOption.include = {
                 book_authors: { include: { authors: true }},
-                book_categories: { include: { categories: true }}
+                book_categories: { include: { categories: true }},
+                reviews: { select: { rating: true }}
             };
         const result = await prisma.books.findMany(queryOption)
+        const totalCount = await prisma.books.count({
+            where: filters
+        });
         //3 res
         const simpleResult = result.map((data) => {
+            const avgRating = data.reviews.length > 0
+                ? data.reviews.reduce((sum, r) => sum + r.rating, 0) / data.reviews.length
+                : 0;
+
             return {
             "book_id": data.book_id,
             "title": data.title,
@@ -140,12 +171,14 @@ routerBooks.get("/", validateQuery, async(req, res) => {
             "author": data.book_authors.map((arr_author) => {
                 return arr_author.authors.name}),
             "category": data.book_categories.map((arr_category) => {
-                return arr_category.categories.name})
+                return arr_category.categories.name}),
+            rating: avgRating
         }
         });
         return res.status(200).json({
             "success": true,
-            "data": simpleResult
+            "data": simpleResult,
+            "total": totalCount
         });
     } catch (error) {
         return res.status(500).json({
@@ -153,7 +186,6 @@ routerBooks.get("/", validateQuery, async(req, res) => {
             "message": "Internal server error. Please try again later."
         });
     }
-
 });
 routerBooks.post("/", postBookValidation, async (req, res) => {
     //1 access req and body
