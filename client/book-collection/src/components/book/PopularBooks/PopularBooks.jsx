@@ -8,10 +8,9 @@ const PopularBooks = ({ books }) => {
     return (
         <section className="popular-section">
         <h2>Popular Books</h2>
-
         <div className="book-grid">
             {books.map(book => (
-            <BookCard key={book.id} book={book} />
+            <BookCard key={book.book_id} book={book} />
             ))}
         </div>
         </section>

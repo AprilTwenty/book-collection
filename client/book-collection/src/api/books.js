@@ -7,8 +7,8 @@ export async function getLatestBooks (limit = 10) {
     return respone;
 }
 
-export async function getBooks (sortQuery = "") {
-    const response = await axios.get(endPoint + sortQuery);
+export async function getBooks (sortQuery = {}) {
+    const response = await axios.get(endPoint, { params: sortQuery });
     return response;
 }
 

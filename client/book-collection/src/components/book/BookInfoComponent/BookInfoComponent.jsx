@@ -1,6 +1,6 @@
 import axios from 'axios';
 import React, { useState, useEffect } from 'react';
-import { getBooks } from '../../../api/books';
+import { getBooksById } from '../../../api/books';
 import './BookInfo.css'
 import { useParams } from 'react-router-dom';
 import noImg from "/No_Image_Available.jpg";
@@ -13,11 +13,8 @@ function BookInfo() {
 
     useEffect(() => {
         async function fetchBook() {
-            const clientData = {};
-            clientData.query = "";
-            clientData.params = "/" + id;
             try {
-                const response = await getBooks(clientData);
+                const response = await getBooksById(id);
                 if (response.data && response.data.success) {
                     setBook(response.data.data);
                 } else {
@@ -31,8 +28,8 @@ function BookInfo() {
         fetchBook();
     }, [id])
 
-    if (!book) return <div>กำลังโหลดข้อมูล...</div>
     if (error) return <div>{error}</div>
+    if (!book) return <div>กำลังโหลดข้อมูล...</div>
     return (
         <div className="book-info-box">
             <div className='book-detail-box'>
@@ -78,8 +75,11 @@ function BookInfo() {
                         {
                             book.category.map((category, index) => {
                                 return (
-                                    <Link to={`/books?category=${category}`}>
-                                        <div key={index} className='detail-item'>{category}</div>
+                                    <Link
+                                        key={category} 
+                                        to={`/books?category=${category}`}
+                                    >
+                                        <div className='detail-item'>{category}</div>
                                     </Link>
                                 )
                             })
@@ -92,8 +92,11 @@ function BookInfo() {
                         {
                             book.author.map((author, index) => {
                                 return (
-                                    <Link to={`/books?author=${author}`} >
-                                        <div key={index} className='detail-item'>{author}</div>
+                                    <Link 
+                                        key={author}
+                                        to={`/books?author=${author}`} 
+                                    >
+                                        <div  className='detail-item'>{author}</div>
                                     </Link>
                                 )
                             })

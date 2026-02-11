@@ -16,12 +16,18 @@ function HomePage() {
 useEffect(() => {
   async function fetchBook() {
     try {
-      const latestRes = await getLatestBooks(10);
-      const response = await getBooks("?page=1&limit=10");
+      const latestRes = await getLatestBooks(5);
+      const response = await getBooks({
+        page: 1,
+        limit: 6
+      });
+      const popularRes = await getBooks({
+        sort: "rating",
+        order: "desc",
+        page: 1,
+        limit: 5
+      });
 
-      const popularRes = await getBooks(
-        "?sort=rating&order=desc&page=1&limit=5"
-      );
       if (latestRes.data?.success) {
         setLatestBooks(latestRes.data.data);
       } else {
@@ -75,7 +81,7 @@ useEffect(() => {
 
       {/* POPULAR BOOKS SECTION */}
       <section className="popular-section">
-        <PopularBooks books={popularBooks} />
+        <PopularBooks books={books} />
       </section>
 
     </main>
