@@ -130,7 +130,9 @@ routerBooks.get("/", validateQuery, async(req, res) => {
         queryOption.take = limitInt;
     }
     if (safeSort !== "rating") {
-      queryOption.orderBy[safeSort] = safeOrder;
+        queryOption.orderBy = {
+            [safeSort]: safeOrder
+        };
     }
     if (safeSort === "rating") {
       queryOption.orderBy = {
