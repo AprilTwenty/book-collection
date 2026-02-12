@@ -90,95 +90,124 @@ routerBooks.get("/:bookId", async (req, res) => {
         });
     }
 });
-routerBooks.get("/", validateQuery, async(req, res) => {
-    //1 access req
-    const { name, category, author, page, limit, sort, order } = req.query;
-    const allowedSortFields = [
-      "title",
-      "published_year",
-      "created_at",
-      "rating"
-    ];
-    const safeSort = allowedSortFields.includes(sort) ? sort : "created_at";
-    const safeOrder = order === "asc" ? "asc" : "desc";
-    let filters = {};
-    if (name) {
-        filters.title = { contains: name, mode: "insensitive" }
-    };
-    if (author) {
-        filters.book_authors = {
-            some: {
-                authors: { name: { contains : author, mode: "insensitive" }}
-            }
-        }
-    }
-    if (category) {
-        filters.book_categories = {
-            some: {
-                categories: {  name: { contains: category, mode: "insensitive" }}
-            }
-        }
-    }
-    let queryOption = { 
-        where: filters,
-        orderBy: {} 
-    };
-    if (page !== undefined && limit !== undefined) {
-        const pageInt = parseInt(page, 10);
-        const limitInt = parseInt(limit, 10);
-        queryOption.skip = (pageInt -1) * limitInt;
-        queryOption.take = limitInt;
-    }
-    if (safeSort === "rating") {
-        simpleResult.sort((a, b) => {
-            return safeOrder === "asc"
-            ? a.rating - b.rating
-            : b.rating - a.rating;
-        });
-    }
-    //2 sql
-    try {
-        queryOption.include = {
-                book_authors: { include: { authors: true }},
-                book_categories: { include: { categories: true }},
-                reviews: { select: { rating: true }}
-            };
-        const result = await prisma.books.findMany(queryOption)
-        const totalCount = await prisma.books.count({
-            where: filters
-        });
-        //3 res
-        let simpleResult = result.map((data) => {
-        const avgRating = data.reviews.length > 0
-            ? data.reviews.reduce((sum, r) => sum + r.rating, 0) / data.reviews.length
-            : 0;
+routerBooks.get("/", validateQuery, async (req, res) => {
+  // 1️⃣ access req
+  const { name, category, author, page, limit, sort, order } = req.query;
 
-        return {
-            book_id: data.book_id,
-            title: data.title,
-            description: data.description,
-            isbn: data.isbn,
-            publisher: data.publisher,
-            published_year: data.published_year,
-            cover_url: data.cover_url,
-            created_at: data.created_at,
-            updated_at: data.updated_at,
-            author: data.book_authors.map(a => a.authors.name),
-            category: data.book_categories.map(c => c.categories.name),
-            rating: avgRating
-        };
-        });
-        return res.status(200).json({
-            "success": true,
-            "data": simpleResult,
-            "total": totalCount
-        });
-    } catch (error) {
-        return res.status(500).json({
-            "success": false,
-            "message": "Internal server error. Please try again later."
-        });
+  const allowedSortFields = [
+    "title",
+    "published_year",
+    "created_at",
+    "rating"
+  ];
+
+  const safeSort = allowedSortFields.includes(sort) ? sort : "created_at";
+  const safeOrder = order === "asc" ? "asc" : "desc";
+
+  let filters = {};
+
+  if (name) {
+    filters.title = { contains: name, mode: "insensitive" };
+  }
+
+  if (author) {
+    filters.book_authors = {
+      some: {
+        authors: { name: { contains: author, mode: "insensitive" } }
+      }
+    };
+  }
+
+  if (category) {
+    filters.book_categories = {
+      some: {
+        categories: { name: { contains: category, mode: "insensitive" } }
+      }
+    };
+  }
+
+  // 2️⃣ prepare query option
+  let queryOption = {
+    where: filters
+  };
+
+  // pagination
+  if (page !== undefined && limit !== undefined) {
+    const pageInt = parseInt(page, 10);
+    const limitInt = parseInt(limit, 10);
+
+    queryOption.skip = (pageInt - 1) * limitInt;
+    queryOption.take = limitInt;
+  }
+
+  // sort ปกติ (ยกเว้น rating)
+  if (safeSort !== "rating") {
+    queryOption.orderBy = {
+      [safeSort]: safeOrder
+    };
+  }
+
+  try {
+    // include relations
+    queryOption.include = {
+      book_authors: { include: { authors: true } },
+      book_categories: { include: { categories: true } },
+      reviews: { select: { rating: true } }
+    };
+
+    const result = await prisma.books.findMany(queryOption);
+
+    const totalCount = await prisma.books.count({
+      where: filters
+    });
+
+    // 3️⃣ map result
+    let simpleResult = result.map((data) => {
+      const avgRating =
+        data.reviews.length > 0
+          ? data.reviews.reduce((sum, r) => sum + r.rating, 0) /
+            data.reviews.length
+          : 0;
+
+      return {
+        book_id: data.book_id,
+        title: data.title,
+        description: data.description,
+        isbn: data.isbn,
+        publisher: data.publisher,
+        published_year: data.published_year,
+        cover_url: data.cover_url,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        author: data.book_authors.map((a) => a.authors.name),
+        category: data.book_categories.map((c) => c.categories.name),
+        rating: avgRating
+      };
+    });
+
+    // 4️⃣ sort by rating (หลังจากมี simpleResult แล้ว)
+    if (safeSort === "rating") {
+      simpleResult.sort((a, b) =>
+        safeOrder === "asc"
+          ? a.rating - b.rating
+          : b.rating - a.rating
+      );
     }
+
+    // 5️⃣ response
+    return res.status(200).json({
+      success: true,
+      data: simpleResult,
+      total: totalCount
+    });
+
+  } catch (error) {
+    console.error("Error in GET /books:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error. Please try again later."
+    });
+  }
 });
 routerBooks.post("/", postBookValidation, async (req, res) => {
     //1 access req and body
