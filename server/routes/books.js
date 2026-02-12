@@ -129,19 +129,12 @@ routerBooks.get("/", validateQuery, async(req, res) => {
         queryOption.skip = (pageInt -1) * limitInt;
         queryOption.take = limitInt;
     }
-    if (safeSort !== "rating") {
-        queryOption.orderBy = {
-            [safeSort]: safeOrder
-        };
-    }
     if (safeSort === "rating") {
-      queryOption.orderBy = {
-        reviews: {
-          _avg: {
-            rating: safeOrder
-          }
-        }
-      };
+        simpleResult.sort((a, b) => {
+            return safeOrder === "asc"
+            ? a.rating - b.rating
+            : b.rating - a.rating;
+        });
     }
     //2 sql
     try {
@@ -155,27 +148,25 @@ routerBooks.get("/", validateQuery, async(req, res) => {
             where: filters
         });
         //3 res
-        const simpleResult = result.map((data) => {
-            const avgRating = data.reviews.length > 0
-                ? data.reviews.reduce((sum, r) => sum + r.rating, 0) / data.reviews.length
-                : 0;
+        let simpleResult = result.map((data) => {
+        const avgRating = data.reviews.length > 0
+            ? data.reviews.reduce((sum, r) => sum + r.rating, 0) / data.reviews.length
+            : 0;
 
-            return {
-            "book_id": data.book_id,
-            "title": data.title,
-            "description": data.description,
-            "isbn": data.isbn,
-            "publisher": data.publisher,
-            "published_year": data.published_year,
-            "cover_url": data.cover_url,
-            "created_at": data.created_at,
-            "updated_at": data.updated_at,
-            "author": data.book_authors.map((arr_author) => {
-                return arr_author.authors.name}),
-            "category": data.book_categories.map((arr_category) => {
-                return arr_category.categories.name}),
+        return {
+            book_id: data.book_id,
+            title: data.title,
+            description: data.description,
+            isbn: data.isbn,
+            publisher: data.publisher,
+            published_year: data.published_year,
+            cover_url: data.cover_url,
+            created_at: data.created_at,
+            updated_at: data.updated_at,
+            author: data.book_authors.map(a => a.authors.name),
+            category: data.book_categories.map(c => c.categories.name),
             rating: avgRating
-        }
+        };
         });
         return res.status(200).json({
             "success": true,
