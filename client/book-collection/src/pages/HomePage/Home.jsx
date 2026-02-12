@@ -15,12 +15,14 @@ function HomePage() {
   const [allBooks, setAllBooks] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
 
 useEffect(() => {
   async function fetchBook() {
     try {
+      setIsLoading(true);
       const latestRes = await getLatestBooks(5);
       const response = await getBooks({
         page: 1,
@@ -64,6 +66,8 @@ useEffect(() => {
     } catch (error) {
       console.error(error);
       setError("เกิดข้อผิดพลาดในการโหลดข้อมูล");
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -105,9 +109,13 @@ useEffect(() => {
         <h2>All Books</h2>
 
         <div className="book-grid">
-          {allBooks.map(book => (
-            <BookCard key={book.book_id} book={book} />
-          ))}
+          { isLoading ? (
+            <p>กำลังโหลดหนังสือ...</p>
+          ) : (
+            allBooks.map(book => (
+              <BookCard key={book.book_id} book={book} />
+            ))
+          )}
         </div>
 
         {/* Pagination */}
@@ -115,6 +123,7 @@ useEffect(() => {
           {Array.from({ length: totalPages }, (_, index) => (
             <button
               key={index}
+              disabled={isLoading}
               className={currentPage === index + 1 ? "active-page" : ""}
               onClick={() => setCurrentPage(index + 1)}
             >
