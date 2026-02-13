@@ -1,18 +1,17 @@
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import pg from "pg";
 
-let prisma;
+const { Pool } = pg;
 
-if (process.env.NODE_ENV === "production") {
-  prisma = new PrismaClient({
-    datasourceUrl: process.env.DATABASE_URL,
-  });
-} else {
-  if (!global.prisma) {
-    global.prisma = new PrismaClient({
-      datasourceUrl: process.env.DATABASE_URL,
-    });
-  }
-  prisma = global.prisma;
-}
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+const adapter = new PrismaPg(pool);
+
+const prisma = new PrismaClient({
+  adapter,
+});
 
 export default prisma;
