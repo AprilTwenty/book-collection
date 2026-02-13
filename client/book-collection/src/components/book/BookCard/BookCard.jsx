@@ -3,16 +3,16 @@ import { Link } from "react-router-dom";
 
 const BookCard = ({ book }) => {
   return (
-    <div className="book-card">
+    <Link to={`/books/${book.book_id}`} className="book-card">
       <div className="book-image-wrapper">
-        <Link to={`/books/${book.book_id}`}>
+        
         <img src={book.cover_url} alt={book.title} />
-        </Link>
+        
       </div>
 
       <h3 className="book-title">{book.title}</h3>
-      <span>⭐</span>
-    </div>
+      <span>⭐ {book.rating?.toFixed(1) || 0}</span>
+    </Link>
     
   );
 };

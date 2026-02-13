@@ -7,6 +7,7 @@ import BookInfoPage from './pages/BookInfoPage/BookInfoPage.jsx';
 import RegisterPage from './pages/RegisterPage/RegisterPage.jsx';
 import LoginPage from './pages/LoginPage/LoginPage.jsx';
 import ProtectedRoute from "./pages/ProtectedRoute.jsx";
+import BooksPage from "./pages/BooksPage/BooksPage.jsx";
 import { useAuth } from "./context/AuthContext";
 
 
@@ -21,6 +22,7 @@ function App() {
         <Routes>
           <Route path='/' element={ <HomePage /> } /> 
           <Route path='/books/:id' element={ <ProtectedRoute><BookInfoPage /></ProtectedRoute> } />
+          <Route path="/books" element={<BooksPage />} />
           <Route path='/auth/register' element={ <RegisterPage /> } />
           <Route path="/auth/login" element={ isLogin ? <Navigate to="/" replace /> : <LoginPage /> } />
         </Routes>

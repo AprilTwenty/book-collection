@@ -19,6 +19,11 @@ function HeaderNavBar() {
         navigate("/auth/login");
     };
 
+    const handleSearch = (e) => {
+        e.preventDefault();
+        navigate(`/books?name=${encodeURIComponent(search)}`);
+    };
+
     useEffect(() => {
         setIsProfileOpen(false);
     }, [location.pathname]);
@@ -47,21 +52,18 @@ function HeaderNavBar() {
                 <Link to={"/aurhors"}>Authors</Link>
             </div>
             <div className='nav-actions'>
-                <div className="nav-search">
-                    <input 
-                        type="text" 
-                        className="nav-search__input" 
-                        placeholder="Search books..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                    />
-                    <Link 
-                        to={`/books?search=${encodeURIComponent(search)}`}
-                        className="nav-search__btn"
-                        >
-                        🔎
-                    </Link>
-                </div>
+                <form onSubmit={handleSearch} className="nav-search">
+                        <input 
+                            type="text" 
+                            className="nav-search__input" 
+                            placeholder="Search books..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+                        <button type="submit" className="nav-search__btn">🔎</button>
+                </form>
+                    
+
                 <div className="nav-login">
                     {isLogin ? (
                         <button onClick={logout} className='nav-auth' >Logout</button>
