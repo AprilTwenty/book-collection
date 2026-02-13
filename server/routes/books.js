@@ -49,7 +49,7 @@ routerBooks.get("/:bookId", async (req, res) => {
     }
     //2 sql statment
     try {
-    const result = await prisma.books.findUnique({
+    const book = await prisma.books.findUnique({
         where: {book_id: bookIdFromClientInt},
         include: { 
             book_authors: {include: { authors: true }},
@@ -57,25 +57,32 @@ routerBooks.get("/:bookId", async (req, res) => {
          }
     });
     //3 res section
-    if (!result) {
+    if (!book) {
         return res.status(404).json({
             "success": false,
             "message": "Book not found"
         });
     }
+    const ratingData = await prisma.reviews.aggregate({
+        where: { book_id: bookIdFromClientInt },
+        _avg: { rating: true },
+        _count: { rating: true }
+    });
     const simpleResult = {
-        "book_id": result.book_id,
-        "title": result.title,
-        "description": result.description,
-        "isbn": result.isbn,
-        "publisher": result.publisher,
-        "published_year": result.published_year,
-        "cover_url": result.cover_url,
-        "created_at": result.created_at,
-        "updated_at": result.updated_at,
-        "author": result.book_authors.map((arr_author) => {
+        "book_id": book.book_id,
+        "title": book.title,
+        "description": book.description,
+        "isbn": book.isbn,
+        "publisher": book.publisher,
+        "published_year": book.published_year,
+        "average_rating": ratingData._avg.rating ?? 0,
+        "total_reviews": ratingData._count.rating,
+        "cover_url": book.cover_url,
+        "created_at": book.created_at,
+        "updated_at": book.updated_at,
+        "author": book.book_authors.map((arr_author) => {
             return arr_author.authors.name}),
-        "category": result.book_categories.map((arr_category) => {
+        "category": book.book_categories.map((arr_category) => {
             return arr_category.categories.name})
     }
     return res.status(200).json({

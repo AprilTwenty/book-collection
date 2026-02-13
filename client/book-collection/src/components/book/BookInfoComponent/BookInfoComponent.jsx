@@ -54,6 +54,10 @@ function BookInfo() {
                         <div>{book.published_year}</div>
                     </div>
                     <div className='book-detail-title'>
+                        <div className='book-detail-label'>Rating: </div>
+                        <div>{book.average_rating}</div>
+                    </div>
+                    <div className='book-detail-title'>
                         <div className='book-detail-label'>วันที่ลงข้อมูล: </div>
                         <div>{new Date(book.created_at).toLocaleDateString("th-TH", {
                             day: "2-digit",
