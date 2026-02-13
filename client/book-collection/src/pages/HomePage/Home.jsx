@@ -10,8 +10,8 @@ import React, { useEffect, useState } from "react";
 function HomePage() {
 
   const [books, setBooks] = useState([]);
-  const [ popularBooks, setPopularBooks ] = useState([]);
-  const [ latestBooks, setLatestBooks ] = useState([]);
+  const [popularBooks, setPopularBooks ] = useState([]);
+  const [latestBooks, setLatestBooks ] = useState([]);
   const [allBooks, setAllBooks] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -101,7 +101,7 @@ useEffect(() => {
 
       {/* POPULAR BOOKS SECTION */}
       <section className="popular-section">
-        <PopularBooks books={books} />
+        <PopularBooks books={popularBooks} />
       </section>
 
       {/* ALL BOOKS SECTION */}
