@@ -8,19 +8,13 @@ routerReviews.use(protect);
 
 routerReviews.post("/", reviewValidation, async (req, res) => {
     //1 access request
-    const { book_id, user_id, rating, comment } = req.body;
-    const userIdFromTokenInt = parseInt(req.user.user_id, 10);
-    const userIdInt = parseInt(user_id, 10);
+    const { book_id, rating, comment } = req.body;
+    const userIdInt = parseInt(req.user.user_id, 10);
     const bookIdInt = parseInt(book_id,10);
     const ratingInt = parseInt(rating, 10)
     try {
         //2 sql
-        if (userIdFromTokenInt !== userIdInt) {
-            return res.status(403).json({
-                "success": false,
-                "message": "User ID mismatch: Access denied"
-            });
-        }
+        /*
         const user = await prisma.users.findUnique({ where: { user_id: userIdInt } });
         if (!user) {
             return res.status(404).json({
@@ -28,6 +22,7 @@ routerReviews.post("/", reviewValidation, async (req, res) => {
                 "message": "User not found"
             });
         }
+        */
         const book = await prisma.books.findUnique({ where: { book_id: bookIdInt }});
         if (!book) {
             return res.status(404).json({
@@ -35,16 +30,38 @@ routerReviews.post("/", reviewValidation, async (req, res) => {
                 "message": "Book not found"
             });
         }
+        const existing = await prisma.reviews.findFirst({
+            where:{
+                book_id: bookIdInt,
+                user_id: userIdInt
+            }
+        });
+        if (existing){
+            return res.status(409).json({
+                success:false,
+                message:"You already reviewed this book"
+            });
+        }
         const createReview = {
             data: {
                 book_id: bookIdInt,
                 user_id: userIdInt,
                 rating: ratingInt,
-                comment,
-                created_at: new Date()
+                comment
             }
         };
         const result = await prisma.reviews.create(createReview);
+        const avg = await prisma.reviews.aggregate({
+            where:{ book_id: bookIdInt },
+            _avg:{ rating:true }
+        });
+
+        await prisma.books.update({
+            where:{ book_id: bookIdInt },
+            data:{ average_rating: avg._avg.rating ?? 0}
+
+        });
+
         //3 response
         return res.status(201).json({
             "success": true,
@@ -61,8 +78,9 @@ routerReviews.post("/", reviewValidation, async (req, res) => {
 routerReviews.get("/:reviewId", validateId("reviewId"), async (req, res) => {
     //1 access request
     //2 sql
+    const reviewIdInt = parseInt(req.params.reviewId, 10);
     const findId = {
-        where: { review_id: req.params.reviewId },
+        where: { review_id: reviewIdInt },
     };
     try {
         const result = await prisma.reviews.findUnique(findId);
@@ -89,18 +107,12 @@ routerReviews.get("/", validateQuery, async (req, res) => {
     const { user_id, book_id, page, limit } = req.query;
     //2 sql
     let searchCondition = {};
+
     if (user_id) {
-        searchCondition = {
-            user_id: user_id
-        }
+    searchCondition.user_id = parseInt(user_id);
     }
     if (book_id) {
-        searchCondition = {
-            OR: [
-                { user_id: user_id },
-                { book_id: book_id }
-            ]
-        }
+    searchCondition.book_id = parseInt(book_id);
     }
     let queryOption = { 
         where: searchCondition,
@@ -112,7 +124,19 @@ routerReviews.get("/", validateQuery, async (req, res) => {
         queryOption.take = limitInt;
     }
     try {
-        const result = await prisma.reviews.findMany(queryOption);
+        //const result = await prisma.reviews.findMany(queryOption);
+        const result = await prisma.reviews.findMany({
+            ...queryOption,
+            include:{
+                users:{
+                select:{
+                    user_id:true,
+                    username:true,
+                    avatar:true
+                }
+                }
+            }
+        });
         const count = await prisma.reviews.count({ where: searchCondition });
         //3 response
         return res.status(200).json({
@@ -130,9 +154,10 @@ routerReviews.get("/", validateQuery, async (req, res) => {
 routerReviews.put("/:reviewId", validateId("reviewId"), reviewUpdateValidation, async (req, res) => {
     //1 access request
     const { rating, comment } = req.body;
+    const reviewIdInt = parseInt(req.params.reviewId, 10);
     //extra validate
     const checkReview = await prisma.reviews.findUnique({
-        where: { review_id: req.params.reviewId }
+        where: { review_id: reviewIdInt }
     });
     if (!checkReview) {
         return res.status(404).json({
@@ -140,8 +165,14 @@ routerReviews.put("/:reviewId", validateId("reviewId"), reviewUpdateValidation, 
             "message": "Review not found"
         });
     }
+    if (checkReview.user_id !== req.user.user_id) {
+        return res.status(403).json({
+            success:false,
+            message:"Forbidden"
+        });
+    }
     const updateReview = {
-        where: { review_id: req.params.reviewId },
+        where: { review_id: reviewIdInt },
         data: {
             rating,
             comment
@@ -150,6 +181,14 @@ routerReviews.put("/:reviewId", validateId("reviewId"), reviewUpdateValidation, 
     //2 sql
     try {
         const result = await prisma.reviews.update(updateReview);
+        const avg = await prisma.reviews.aggregate({
+            where:{ book_id: checkReview.book_id },
+            _avg:{ rating:true }
+        });
+        await prisma.books.update({
+            where:{ book_id: checkReview.book_id },
+            data:{ average_rating: avg._avg.rating ?? 0 }
+        });
         //3 response
         return res.status(200).json({
             "success": true,
@@ -166,9 +205,10 @@ routerReviews.put("/:reviewId", validateId("reviewId"), reviewUpdateValidation, 
 });
 routerReviews.delete("/:reviewId", validateId("reviewId"), async (req, res) => {
     //1 access requset
+    const reviewIdInt = parseInt(req.params.reviewId, 10);
     //2 sql
     const deleteReview = {
-        where: { review_id: req.params.reviewId }
+        where: { review_id: reviewIdInt }
     }
     try {
         const deleteTarget = await prisma.reviews.findUnique(deleteReview);
@@ -178,7 +218,21 @@ routerReviews.delete("/:reviewId", validateId("reviewId"), async (req, res) => {
                 "message": "Review not found"
             });
         }
+        if (deleteTarget.user_id !== req.user.user_id) {
+            return res.status(403).json({
+            success:false,
+            message:"Forbidden"
+        });
+    }
         const result = await prisma.reviews.delete(deleteReview);
+        const avg = await prisma.reviews.aggregate({
+            where:{ book_id: deleteTarget.book_id },
+            _avg:{ rating:true }
+        });
+        await prisma.books.update({
+            where:{ book_id: deleteTarget.book_id },
+            data:{ average_rating: avg._avg.rating ?? 0 }
+        });
         //3 response
         return res.status(200).json({
             "success": true,
