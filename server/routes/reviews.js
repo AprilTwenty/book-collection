@@ -128,7 +128,7 @@ routerReviews.get("/", validateQuery, async (req, res) => {
         const result = await prisma.reviews.findMany({
             ...queryOption,
             include:{
-                users:{
+                user:{
                 select:{
                     user_id:true,
                     username:true,
