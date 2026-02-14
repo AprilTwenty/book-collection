@@ -1,22 +1,25 @@
 import jwt from "jsonwebtoken";
 
 export const protect = (req, res, next) => {
-    const token = req.headers.authorization;
-    if (!token || !token.startsWith("Bearer ")) {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
         return res.status(401).json({
-            "success": false,
-            "message": "Token has invalid format"
+            success: false,
+            message: "Unauthorized"
         });
     }
-    const tokenWithoutBearer = token.split(" ")[1];
-    jwt.verify(tokenWithoutBearer, process.env.SECRET_KEY, (err, payload) => {
-        if (err) {
-            return res.status(401).json({
-                "success": false,
-                "message": "Token is invalid"
-            });
-        }
+
+    try {
+        const token = authHeader.split(" ")[1];
+        const payload = jwt.verify(token, process.env.SECRET_KEY);
+
         req.user = payload;
         next();
-    })
+    } catch (error) {
+        return res.status(401).json({
+            success: false,
+            message: "Token invalid or expired"
+        });
+    }
 };

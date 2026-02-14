@@ -1,0 +1,26 @@
+.review-box {
+    margin-top: 40px;
+    padding: 20px;
+    background: #ffffff;
+    border-radius: 10px;
+}
+
+.review-card {
+    border-bottom: 1px solid #e5e5e5;
+    padding: 15px 0;
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.review-comment {
+    margin-bottom: 8px;
+}
+
+.review-date {
+    font-size: 12px;
+    color: #777;
+}

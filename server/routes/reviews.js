@@ -4,9 +4,9 @@ import { reviewValidation, validateId, validateQuery, reviewUpdateValidation } f
 import { protect } from "../middleware/protect.js"
 
 const routerReviews = Router();
-routerReviews.use(protect);
+//routerReviews.use(protect);
 
-routerReviews.post("/", reviewValidation, async (req, res) => {
+routerReviews.post("/", protect, reviewValidation, async (req, res) => {
     //1 access request
     const { book_id, rating, comment } = req.body;
     const userIdInt = parseInt(req.user.user_id, 10);
@@ -132,7 +132,7 @@ routerReviews.get("/", validateQuery, async (req, res) => {
                 select:{
                     user_id:true,
                     username:true,
-                    avatar:true
+                    avatar_url:true
                 }
                 }
             }
@@ -151,7 +151,7 @@ routerReviews.get("/", validateQuery, async (req, res) => {
         });
     }
 });
-routerReviews.put("/:reviewId", validateId("reviewId"), reviewUpdateValidation, async (req, res) => {
+routerReviews.put("/:reviewId", protect, validateId("reviewId"), reviewUpdateValidation, async (req, res) => {
     //1 access request
     const { rating, comment } = req.body;
     const reviewIdInt = parseInt(req.params.reviewId, 10);
@@ -181,6 +181,7 @@ routerReviews.put("/:reviewId", validateId("reviewId"), reviewUpdateValidation, 
     //2 sql
     try {
         const result = await prisma.reviews.update(updateReview);
+        /*
         const avg = await prisma.reviews.aggregate({
             where:{ book_id: checkReview.book_id },
             _avg:{ rating:true }
@@ -189,6 +190,7 @@ routerReviews.put("/:reviewId", validateId("reviewId"), reviewUpdateValidation, 
             where:{ book_id: checkReview.book_id },
             data:{ average_rating: avg._avg.rating ?? 0 }
         });
+        */
         //3 response
         return res.status(200).json({
             "success": true,
@@ -203,7 +205,7 @@ routerReviews.put("/:reviewId", validateId("reviewId"), reviewUpdateValidation, 
         });
     }
 });
-routerReviews.delete("/:reviewId", validateId("reviewId"), async (req, res) => {
+routerReviews.delete("/:reviewId", protect, validateId("reviewId"), async (req, res) => {
     //1 access requset
     const reviewIdInt = parseInt(req.params.reviewId, 10);
     //2 sql
@@ -225,6 +227,7 @@ routerReviews.delete("/:reviewId", validateId("reviewId"), async (req, res) => {
         });
     }
         const result = await prisma.reviews.delete(deleteReview);
+        /*
         const avg = await prisma.reviews.aggregate({
             where:{ book_id: deleteTarget.book_id },
             _avg:{ rating:true }
@@ -233,6 +236,7 @@ routerReviews.delete("/:reviewId", validateId("reviewId"), async (req, res) => {
             where:{ book_id: deleteTarget.book_id },
             data:{ average_rating: avg._avg.rating ?? 0 }
         });
+        */
         //3 response
         return res.status(200).json({
             "success": true,
