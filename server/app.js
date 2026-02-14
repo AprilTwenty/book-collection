@@ -18,7 +18,8 @@ const PORT = 4000;
 
 app.use(cors({
   origin: [
-    "https://bookish-acorn-5g49rrw7qrw5h7w64-5173.app.github.dev"
+    "https://bookish-acorn-5g49rrw7qrw5h7w64-5173.app.github.dev",
+    "https://book-collection-front-end.vercel.app"
   ],
   credentials: true
 }));
