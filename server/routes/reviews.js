@@ -123,8 +123,11 @@ routerReviews.get("/", validateQuery, async (req, res) => {
         queryOption.skip = (pageInt - 1) * limitInt;
         queryOption.take = limitInt;
     }
+    console.log("query:", req.query);
     try {
         //const result = await prisma.reviews.findMany(queryOption);
+        
+
         const result = await prisma.reviews.findMany({
             ...queryOption,
             include:{
@@ -145,6 +148,8 @@ routerReviews.get("/", validateQuery, async (req, res) => {
             "data": result
         });
     } catch (error) {
+        console.error("GET /reviews error:", error);
+        
         return res.status(500).json({
             "success": false,
             "message": "Internal server error. Please try again"
