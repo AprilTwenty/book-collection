@@ -16,8 +16,13 @@ dotenv.config();
 const app = express();
 const PORT = 4000;
 
+app.use(cors({
+  origin: [
+    "https://bookish-acorn-5g49rrw7qrw5h7w64-5173.app.github.dev"
+  ],
+  credentials: true
+}));
 app.use(express.json());
-app.use(cors());
 app.use("/books", routerBooks);
 app.use("/authors", routerAuthors);
 app.use("/categories", routerCategories);
