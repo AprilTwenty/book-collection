@@ -135,7 +135,11 @@ routerReviews.get("/", validateQuery, async (req, res) => {
                     select:{
                     user_id:true,
                     username:true,
-                    avatar_url:true
+                    user_profile:{
+                        select:{
+                        avatar_url:true
+                        }
+                    }
                     }
                 }
             }
