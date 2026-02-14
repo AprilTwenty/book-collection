@@ -131,12 +131,12 @@ routerReviews.get("/", validateQuery, async (req, res) => {
         const result = await prisma.reviews.findMany({
             ...queryOption,
             include:{
-                user:{
-                select:{
+                users:{
+                    select:{
                     user_id:true,
                     username:true,
                     avatar_url:true
-                }
+                    }
                 }
             }
         });
@@ -149,7 +149,7 @@ routerReviews.get("/", validateQuery, async (req, res) => {
         });
     } catch (error) {
         console.error("GET /reviews error:", error);
-        
+
         return res.status(500).json({
             "success": false,
             "message": "Internal server error. Please try again"
