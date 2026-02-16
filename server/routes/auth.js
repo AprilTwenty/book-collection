@@ -66,33 +66,26 @@ routerAuth.post("/register", postUserValidation, async (req, res) => {
     }
 }); 
 routerAuth.post("/login", loginValidation, async (req, res) => {
-
+    //1 access request
     const { username, password } = req.body;
-
+    //2 sql
     try {
         const user = await prisma.users.findUnique({
             where: { username }
-        });
-
+        })
         if (!user) {
             return res.status(401).json({
-                success: false,
-                message: `ข้อมูล username ${username} ไม่ถูกต้อง`
+                "success": false,
+                "message": "ข้อมูล username " + username + " ไม่ถูกต้อง"
             });
         }
-
-        const isValidPassword = await bcrypt.compare(
-            password,
-            user.password_hash
-        );
-
+        const isValidPassword = await bcrypt.compare(password, user.password_hash);
         if (!isValidPassword) {
             return res.status(401).json({
-                success: false,
-                message: "ข้อมูล password ไม่ถูกต้อง"
+                "success": false,
+                "message": "ข้อมูล password ไม่ถูกต้อง"
             });
         }
-
         const token = jwt.sign(
             {
                 user_id: user.user_id,
@@ -100,29 +93,22 @@ routerAuth.post("/login", loginValidation, async (req, res) => {
                 email: user.email
             },
             process.env.SECRET_KEY,
-            { expiresIn: "15m" }
+            {
+                expiresIn: '15m'
+            }
         );
-
-        // ⭐⭐⭐ จุดสำคัญ
-        res.cookie("token", token, {
-            httpOnly: true,
-            secure: true,      // ต้อง true บน https (Vercel)
-            sameSite: "none",  // อนุญาต cross-domain
-            maxAge: 15 * 60 * 1000
-        });
-
+        //3 response
         return res.status(200).json({
-            success: true,
-            message: "Login successfully"
+            "success": true,
+            "message": "Login successfully",
+            token
         });
-
     } catch (error) {
         return res.status(500).json({
-            success: false,
-            message: "internal server error"
+            "success": false,
+            "message": "internal server error. Please try again later"
         });
     }
 });
-
 
 export default routerAuth;

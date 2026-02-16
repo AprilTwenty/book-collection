@@ -15,10 +15,14 @@ export async function getReviewsByBookId(bookId) {
 }
 
 export async function createReview(clientData) {
-
-    const response = await axios.post(endPoint, clientData, {
-        withCredentials: true
+    const token = localStorage.getItem("token");
+    if (!token) {
+        throw new Error("No token found");
+    }
+    return axios.post(`${endPoint}`, clientData, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
     });
-    return response;
-    
 }
+
