@@ -18,11 +18,14 @@ export const protect = (req, res, next) => {
         console.log("payload:", payload);
         next();
     } catch (error) {
+        console.log("❌ JWT ERROR:", error.name, error.message);
+
         return res.status(401).json({
             success: false,
             message: "Invalid token"
-        });
-    }
+    });
+}
+
     
 };
 
