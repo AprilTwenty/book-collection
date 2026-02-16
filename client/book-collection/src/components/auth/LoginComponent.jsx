@@ -26,6 +26,7 @@ function LoginComponent() {
         };
         try {
             const response = await loginApi(clientData);
+            console.log(response.data);
             if (response.data && response.data.success) {
                 login(response.data.token, response.data.user);
                 navigate(from, { replace: true });
