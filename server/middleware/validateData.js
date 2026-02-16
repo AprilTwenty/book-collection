@@ -257,7 +257,12 @@ export const reviewValidation = (req, res, next) => {
 
     const { book_id, rating, comment } = req.body;
 
-    if (book_id == null || rating == null || !comment) {
+    if (
+        book_id === undefined ||
+        rating === undefined ||
+        comment === undefined ||
+        comment.trim() === ""
+    ) {
         return res.status(400).json({
             success: false,
             message: "ข้อมูลที่ต้องการมีไม่ครบ"
