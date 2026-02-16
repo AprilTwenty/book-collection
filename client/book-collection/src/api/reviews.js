@@ -16,6 +16,7 @@ export async function getReviewsByBookId(bookId) {
 
 export async function createReview(clientData) {
     const token = localStorage.getItem("token");
+    console.log("TOKEN =", token); // 👈 เพิ่มบรรทัดนี้
     if (!token) {
         throw new Error("No token found");
     }
