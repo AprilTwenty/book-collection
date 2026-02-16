@@ -14,13 +14,14 @@ export const protect = (req, res, next) => {
 
         // ⭐ แก้ตรงนี้
         req.user = payload;
-
+        console.log("payload:", payload);
         next();
     } catch (error) {
         return res.status(401).json({
             success: false,
             message: "Invalid token"
         });
-    }console.log("payload:", payload);
+    }
+    
 };
 
