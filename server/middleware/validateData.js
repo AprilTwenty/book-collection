@@ -248,36 +248,50 @@ export const emailValidation = (req, res, next) => {
 //=========================================== review =======================================
 
 export const reviewValidation = (req, res, next) => {
-    const { user_id, book_id, rating, comment } = req.body;
-    const userIdInt = parseInt(user_id, 10);
-    const bookIdInt = parseInt(book_id,10);
-    const ratingInt = parseInt(rating, 10)
-    if (!user_id || !book_id || !rating || !comment) {
-        return res.status(400).json({
-            "success": false,
-            "message": "ข้อมูลที่ต้องการมีไม่ครบ"
+    if (!req.user) {
+        return res.status(401).json({
+            success:false,
+            message:"Unauthorized"
         });
     }
+
+    const { book_id, rating, comment } = req.body;
+
+    if (book_id == null || rating == null || !comment) {
+        return res.status(400).json({
+            success: false,
+            message: "ข้อมูลที่ต้องการมีไม่ครบ"
+        });
+    }
+
+    const userIdInt = parseInt(req.user.user_id, 10);
+    const bookIdInt = parseInt(book_id,10);
+    const ratingInt = parseInt(rating, 10);
+
     if (isNaN(userIdInt) || userIdInt < 0) {
         return res.status(400).json({
-            "success": false,
-            "message": "ข้อมูล user ไม่ถูกต้อง"
+            success:false,
+            message:"User auth invalid"
         });
     }
+
     if (isNaN(bookIdInt) || bookIdInt < 0) {
         return res.status(400).json({
-            "success": false,
-            "message": "ข้อมูล book ไม่ถูกต้อง"
+            success:false,
+            message:"ข้อมูล book ไม่ถูกต้อง"
         });
     }
+
     if (isNaN(ratingInt) || ratingInt < 1 || ratingInt > 5) {
         return res.status(400).json({
-            "success": false,
-            "message": "คะแนนรีวิว ต้องเป็นเลข 1-5"
+            success:false,
+            message:"คะแนนรีวิว ต้องเป็นเลข 1-5"
         });
     }
+
     next();
 };
+
 export const reviewUpdateValidation = (req, res, next) => {
     const { rating, comment } = req.body;
     const ratingInt = parseInt(rating, 10)
