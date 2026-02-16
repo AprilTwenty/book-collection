@@ -17,13 +17,23 @@ const app = express();
 const PORT = 4000;
 
 app.use(cors({
-  origin: [
-    "https://book-collection-psi.vercel.app",
-    "https://book-collection-front-end.vercel.app",
-    "https://bookish-acorn-5g49rrv7rw5h7w64-5173.app.github.dev"
-  ],
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+
+    if (
+      origin.includes("github.dev") ||
+      origin === "http://localhost:5173" ||
+      origin === "https://book-collection-front-end.vercel.app"
+    ) {
+      callback(null, true);
+    } else {
+      callback(new Error("CORS blocked"));
+    }
+  },
   credentials: true
 }));
+
+app.options("*", cors());
 app.use(express.json());
 app.use("/books", routerBooks);
 app.use("/authors", routerAuthors);
