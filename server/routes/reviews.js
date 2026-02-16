@@ -5,6 +5,10 @@ import { protect } from "../middleware/protect.js"
 
 const routerReviews = Router();
 //routerReviews.use(protect);
+routerReviews.use((req, res, next) => {
+    console.log("🔥 reviews router reached");
+    next();
+});
 
 routerReviews.post("/", protect, reviewValidation, async (req, res) => {
     //1 access request
