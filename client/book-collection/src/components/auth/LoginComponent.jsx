@@ -21,10 +21,8 @@ function LoginComponent() {
         setLoading(true);
         setError(null);
         const clientData = {
-            body: {
-                username,
-                password
-            }
+            username,
+            password
         };
         try {
             const response = await loginApi(clientData);

@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
 import "./BookReviewSection.css";
-import { getReviewById, getReviewsByBookId } from "../../api/reviews";
+import { getReviewById, getReviewsByBookId, createReview } from "../../api/reviews";
 
 function BookReviewSection() {
     const { id } = useParams();
@@ -12,7 +11,35 @@ function BookReviewSection() {
     const [comment, setComment] = useState("");
     const [rating, setRating] = useState(5);
     const [error, setError] = useState(null);
+    const [submitting, setSubmitting] = useState(false);
+
     
+
+    const handleCreateReview = async (e) => {
+        e.preventDefault();
+        if (!comment.trim()) return;
+        setSubmitting(true);
+        setError(null);
+        const clientData = {
+            comment,
+            rating,
+            "book_id": id
+        };
+
+        try {
+            const response = await createReview(clientData);
+            if (response.data?.success) {
+                const newReview = response.data.data;
+                setReviews(prev => [newReview, ...prev]);
+                setComment("");
+                setRating(5);
+            }
+        } catch(error) {
+            setError("create review failed");
+        } finally {
+            setSubmitting(false);
+        }
+    }
 
     useEffect(() => {
         async function fetchReviews() {
@@ -60,8 +87,25 @@ function BookReviewSection() {
                         <div key={review.review_id} className="review-card">
 
                             <div className="review-header">
-                                <strong>{review.users?.username}</strong>
-                                <span>⭐ {review.rating}</span>
+                                <img
+                                    className="profile-img"
+                                    src={
+                                        review.user_profile?.avatar_url || "/avatar-default.png"
+                                    }
+                                    alt="profile"
+                                />
+
+                                <div className="review-user">
+                                    <strong>{review.users?.username}</strong>
+
+                                    <div className="review-rating">
+                                        {[1,2,3,4,5].map(star => (
+                                            <span key={star}>
+                                                {star <= review.rating ? "★" : "☆"}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
 
                             {review.comment && (
@@ -79,28 +123,31 @@ function BookReviewSection() {
                             </div>
 
                         </div>
+
                     ))
                 )}
             </div>
-            <form className="comment-box">
+            <form className="comment-box" onSubmit={handleCreateReview} >
                 <textarea
                     placeholder="เขียนรีวิวที่นี่..."
                     value={comment}
                     onChange={(e)=>setComment(e.target.value)}
                 />
-                {[1,2,3,4,5].map(star => (
-                    <span
-                        key={star}
-                        onClick={() => setRating(star)}
-                        style={{
-                        cursor: "pointer",
-                        fontSize: "24px"
-                        }}
-                    >
-                        {star <= rating ? "⭐" : "☆"}
-                    </span>
-                ))}
-                <button type="submit">ยืนยัน</button>
+                <div className="rating-select">
+                    {[1,2,3,4,5].map(star => (
+                        <span
+                            key={star}
+                            onClick={() => setRating(star)}
+                            className={star <= rating ? "active" : ""}
+                        >
+                            ★
+                        </span>
+                    ))}
+                </div>
+
+                <button type="submit" disabled={submitting}>
+                    {submitting ? "กำลังส่ง..." : "ยืนยัน"}
+                </button>
             </form>
         </div>
     );

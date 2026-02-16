@@ -13,3 +13,12 @@ export async function getReviewsByBookId(bookId) {
         withCredentials: true
     });
 }
+
+export async function createReview(clientData) {
+
+    const response = await axios.post(endPoint, clientData, {
+        withCredentials: true
+    });
+    return response;
+    
+}
