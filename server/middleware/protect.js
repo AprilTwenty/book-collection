@@ -21,7 +21,6 @@ export const protect = (req, res, next) => {
             success: false,
             message: "Invalid token"
         });
-    }
+    }console.log("payload:", payload);
 };
-console.log("payload:", payload);
 
