@@ -1,43 +1,71 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
+import { jwtDecode } from "jwt-decode";
+import api from "../api/api.js";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
+
   const [token, setToken] = useState(
     localStorage.getItem("token")
   );
-  
-  const [user, setUser] = useState(() => {
-    try {
-      const stored = localStorage.getItem("user");
-      if (!stored || stored === "undefined") return null;
-      return JSON.parse(stored);
-    } catch (err) {
-      console.error("Invalid user in localStorage", err);
-      return null;
+  const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+
+  useEffect(() => {
+    if (!token) {
+      setLoading(false);
+      return;
     }
-  });
 
-  const login = (token, user) => {
+    try {
+      const decoded = jwtDecode(token);
+
+      if (decoded.exp * 1000 < Date.now()) {
+        logout();
+      } else {
+        setUser(decoded);
+      }
+    } catch {
+      logout();
+    }
+  }, [token]);
+
+
+  useEffect(() => {
+    if (!user?.user_id) {
+      setLoading(false);
+      return;
+    }
+
+    api
+      .get(`/userprofile/${user.user_id}`)
+      .then(res => setProfile(res.data.data))
+      .catch(() => setProfile(null))
+      .finally(() => setLoading(false));
+
+  }, [user]);
+
+  const login = (token) => {
     localStorage.setItem("token", token);
-    localStorage.setItem("user", JSON.stringify(user));
-
     setToken(token);
-    setUser(user);
   };
 
   const logout = () => {
     localStorage.removeItem("token");
-    localStorage.removeItem("user");
-
     setToken(null);
     setUser(null);
+    setProfile(null);
   };
 
   const value = {
     token,
     user,
-    isLogin: !!token,
+    profile,
+    loading,
+    isLogin: !!user,
     login,
     logout,
   };
@@ -49,8 +77,6 @@ export function AuthProvider({ children }) {
   );
 }
 
-// custom hook
 export function useAuth() {
   return useContext(AuthContext);
 }
- 

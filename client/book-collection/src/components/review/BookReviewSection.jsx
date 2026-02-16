@@ -9,7 +9,10 @@ function BookReviewSection() {
 
     const [reviews, setReviews] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [comment, setComment] = useState("");
+    const [rating, setRating] = useState(5);
     const [error, setError] = useState(null);
+    
 
     useEffect(() => {
         async function fetchReviews() {
@@ -46,37 +49,59 @@ function BookReviewSection() {
     if (error) return <div className="review-box">{error}</div>;
 
     return (
-        <div className="review-box">
-            <h2>ความคิดเห็นผู้อ่าน</h2>
+        <div className="review-section">
+            <div className="review-box">
+                <h2>ความคิดเห็นผู้อ่าน</h2>
 
-            {reviews.length === 0 ? (
-                <p>ยังไม่มีรีวิวสำหรับหนังสือเล่มนี้</p>
-            ) : (
-                reviews.map((review) => (
-                    <div key={review.review_id} className="review-card">
+                {reviews.length === 0 ? (
+                    <p>ยังไม่มีรีวิวสำหรับหนังสือเล่มนี้</p>
+                ) : (
+                    reviews.map((review) => (
+                        <div key={review.review_id} className="review-card">
 
-                        <div className="review-header">
-                            <strong>{review.users?.username}</strong>
-                            <span>⭐ {review.rating}</span>
-                        </div>
-
-                        {review.comment && (
-                            <div className="review-comment">
-                                {review.comment}
+                            <div className="review-header">
+                                <strong>{review.users?.username}</strong>
+                                <span>⭐ {review.rating}</span>
                             </div>
-                        )}
 
-                        <div className="review-date">
-                            {new Date(review.created_at).toLocaleDateString("th-TH", {
-                                day: "2-digit",
-                                month: "short",
-                                year: "numeric"
-                            })}
+                            {review.comment && (
+                                <div className="review-comment">
+                                    {review.comment}
+                                </div>
+                            )}
+
+                            <div className="review-date">
+                                {new Date(review.created_at).toLocaleDateString("th-TH", {
+                                    day: "2-digit",
+                                    month: "short",
+                                    year: "numeric"
+                                })}
+                            </div>
+
                         </div>
-
-                    </div>
-                ))
-            )}
+                    ))
+                )}
+            </div>
+            <form className="comment-box">
+                <textarea
+                    placeholder="เขียนรีวิวที่นี่..."
+                    value={comment}
+                    onChange={(e)=>setComment(e.target.value)}
+                />
+                {[1,2,3,4,5].map(star => (
+                    <span
+                        key={star}
+                        onClick={() => setRating(star)}
+                        style={{
+                        cursor: "pointer",
+                        fontSize: "24px"
+                        }}
+                    >
+                        {star <= rating ? "⭐" : "☆"}
+                    </span>
+                ))}
+                <button type="submit">ยืนยัน</button>
+            </form>
         </div>
     );
 }

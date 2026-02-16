@@ -9,15 +9,14 @@ function HeaderNavBar() {
     const profileRef = useRef(null);
     const navigate = useNavigate();
     const location = useLocation();
-    const { isLogin, logout, user } = useAuth();
+    const { loading, profile, isLogin, logout } = useAuth();
 
     const handleLogout = () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
+        logout();
         setIsProfileOpen(false);
-        setIsLogin(false);
         navigate("/auth/login");
     };
+
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -56,7 +55,7 @@ function HeaderNavBar() {
                         <input 
                             type="text" 
                             className="nav-search__input" 
-                            placeholder="Search books..."
+                            placeholder={"Search books..."}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                         />
@@ -66,7 +65,7 @@ function HeaderNavBar() {
 
                 <div className="nav-login">
                     {isLogin ? (
-                        <button onClick={logout} className='nav-auth' >Logout</button>
+                        <button onClick={handleLogout} className='nav-auth' >Logout</button>
                     ) : (
                         <button onClick={() => navigate('/auth/login')} className='nav-auth' >Login</button>
                     )}
@@ -78,8 +77,13 @@ function HeaderNavBar() {
                         aria-haspopup="true"
                         aria-expanded={isProfileOpen}
                     >
-                        <img className="nav-profile-img"
-                            src={user?.avatar || "/avatar-default.png"}
+                        <img
+                            className="nav-profile-img"
+                            src={
+                                loading
+                                ? "/avatar-default.png"
+                                : profile?.avatar_url || "/avatar-default.png"
+                            }
                             alt="profile"
                         />
                    </button>
@@ -92,7 +96,7 @@ function HeaderNavBar() {
                                 Settings
                             </Link>
                             <button className="profile-dropdown__item logout"
-                             onClick={logout}
+                             onClick={handleLogout}
                              >
                                 Logout
                             </button>
