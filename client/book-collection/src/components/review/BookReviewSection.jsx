@@ -18,6 +18,7 @@ function BookReviewSection() {
     const [rating, setRating] = useState(5);
     const [comment, setComment] = useState("");
     const [error, setError] = useState(null);
+    const [editing, setEditing ]= useState(false);
     const [submitting, setSubmitting] = useState(false);
 
 
