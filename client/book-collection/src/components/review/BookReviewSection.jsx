@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import "./BookReviewSection.css";
 import { getReviewsByBookId, createReview, updateReview } from "../../api/reviews";
 import CreateReviewForm from "./CreateReviewForm.jsx";
+import MyReviewCard from "./MyReviewCard.jsx";
 import { useAuth } from "../../../context/AuthContext";
 
 function BookReviewSection() {
@@ -44,8 +45,6 @@ function BookReviewSection() {
                     : r
                 )
             );
-            setRating(updatedReview.rating);
-            setComment(updatedReview.comment ?? "");
             setMyReview(updatedReview);
             } else {
             // CREATE
@@ -61,6 +60,8 @@ function BookReviewSection() {
             setError("submit review failed");
         } finally {
             setSubmitting(false);
+            setEditing(false);
+
         }
     };
     /*
@@ -174,25 +175,20 @@ function BookReviewSection() {
                     ))
                 )}
             </div>
-            {!myReview ? (
-                    <CreateReviewForm 
-                        comment={comment}
-                        setComment={setComment}
-                        rating={rating}
-                        setRating={setRating}
-                        submitting={submitting}
-                        handleSubmit={handleSubmit}
-                    />
-                ) : (
-                    //<MyReviewCard review={myReview} />
-                    <CreateReviewForm 
-                        comment={comment}
-                        setComment={setComment}
-                        rating={rating}
-                        setRating={setRating}
-                        submitting={submitting}
-                        handleSubmit={handleSubmit}
-                    />
+            {(!myReview || editing) ? (
+                <CreateReviewForm
+                    comment={comment}
+                    setComment={setComment}
+                    rating={rating}
+                    setRating={setRating}
+                    submitting={submitting}
+                    handleSubmit={handleSubmit}
+                />
+            ) : (
+                <MyReviewCard
+                    review={myReview}
+                    onEdit={() => setEditing(true)}
+                />
             )}
             {/*}
             <form className="comment-box" onSubmit={handleSubmit} >
