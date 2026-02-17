@@ -4,7 +4,7 @@ import "./BookReviewSection.css";
 import { getReviewsByBookId, createReview, updateReview } from "../../api/reviews";
 import CreateReviewForm from "./CreateReviewForm.jsx";
 import MyReviewCard from "./MyReviewCard.jsx";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../context/AuthContext.jsx";
 
 function BookReviewSection() {
     const { id } = useParams();

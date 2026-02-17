@@ -8,7 +8,6 @@ const CreateReviewForm = ({
     submitting,
     handleSubmit
 }) => {
-    }
     return (
             <form className="comment-box" onSubmit={handleSubmit} >
                 <textarea
