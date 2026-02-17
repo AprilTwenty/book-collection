@@ -1,20 +1,69 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import "./BookReviewSection.css";
-import { getReviewById, getReviewsByBookId, createReview } from "../../api/reviews";
+import { getReviewsByBookId, createReview, updateReview } from "../../api/reviews";
+import CreateReviewForm from "./CreateReviewForm.jsx";
+import { useAuth } from "../../../context/AuthContext";
 
 function BookReviewSection() {
     const { id } = useParams();
+    const { user, loading: authLoading } = useAuth();
 
+
+
+    const [myReview, setMyReview] = useState(null);
     const [reviews, setReviews] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [comment, setComment] = useState("");
     const [rating, setRating] = useState(5);
+    const [comment, setComment] = useState("");
     const [error, setError] = useState(null);
     const [submitting, setSubmitting] = useState(false);
 
-    
 
+    
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!comment.trim()) return;
+        setSubmitting(true);
+        setError(null);
+        const clientData = {
+            comment,
+            rating,
+            book_id: id
+        };
+        try {
+            let response;
+            if (myReview) {
+            // UPDATE
+            response = await updateReview(myReview.review_id, clientData);
+            const updatedReview = response.data.data;
+            setReviews(prev =>
+                prev.map(r =>
+                r.review_id === updatedReview.review_id
+                    ? updatedReview
+                    : r
+                )
+            );
+            setRating(updatedReview.rating);
+            setComment(updatedReview.comment ?? "");
+            setMyReview(updatedReview);
+            } else {
+            // CREATE
+            response = await createReview(clientData);
+            const newReview = response.data.data;
+            setReviews(prev => [newReview, ...prev]);
+            setComment("");
+            setRating(5);
+            setMyReview(newReview);
+
+            }
+        } catch {
+            setError("submit review failed");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+    /*
     const handleCreateReview = async (e) => {
         e.preventDefault();
         if (!comment.trim()) return;
@@ -40,27 +89,18 @@ function BookReviewSection() {
             setSubmitting(false);
         }
     }
+    */
 
     useEffect(() => {
         async function fetchReviews() {
             try {
                 setLoading(true);
                 const response = await getReviewsByBookId(id);
-                /*
-                const response = await axios.get(
-                    `http://localhost:3000/reviews?book_id=${id}`,
-                    {
-                        withCredentials: true
-                    }
-                );
-                */
-
                 if (response.data.success) {
                     setReviews(response.data.data);
                 } else {
                     setError("ไม่พบรีวิว");
                 }
-
             } catch (err) {
                 console.error(err);
                 setError("โหลดรีวิวไม่สำเร็จ");
@@ -71,9 +111,16 @@ function BookReviewSection() {
 
         fetchReviews();
     }, [id]);
+    useEffect(() => {
+        if (!user?.user_id) return;
 
-    if (loading) return <div className="review-box">กำลังโหลดรีวิว...</div>;
-    if (error) return <div className="review-box">{error}</div>;
+        const found = reviews.find(
+            r => r.user_id === user.user_id
+        );
+        setMyReview(found ?? null);
+    }, [reviews, user]);
+
+    if (loading || authLoading) return <div className="review-box">กำลังโหลดรีวิว...</div>;
 
     return (
         <div className="review-section">
@@ -127,7 +174,28 @@ function BookReviewSection() {
                     ))
                 )}
             </div>
-            <form className="comment-box" onSubmit={handleCreateReview} >
+            {!myReview ? (
+                    <CreateReviewForm 
+                        comment={comment}
+                        setComment={setComment}
+                        rating={rating}
+                        setRating={setRating}
+                        submitting={submitting}
+                        handleSubmit={handleSubmit}
+                    />
+                ) : (
+                    //<MyReviewCard review={myReview} />
+                    <CreateReviewForm 
+                        comment={comment}
+                        setComment={setComment}
+                        rating={rating}
+                        setRating={setRating}
+                        submitting={submitting}
+                        handleSubmit={handleSubmit}
+                    />
+            )}
+            {/*}
+            <form className="comment-box" onSubmit={handleSubmit} >
                 <textarea
                     placeholder="เขียนรีวิวที่นี่..."
                     value={comment}
@@ -145,10 +213,11 @@ function BookReviewSection() {
                     ))}
                 </div>
 
-                <button type="submit" disabled={submitting}>
-                    {submitting ? "กำลังส่ง..." : "ยืนยัน"}
+                <button>
+                    {myReview ? "Update Review" : "Create Review"}
                 </button>
             </form>
+            {*/}
         </div>
     );
 }

@@ -13,10 +13,15 @@ export async function getReviewsByBookId(bookId) {
         withCredentials: true
     });
 }
+export async function getReviews (sortQuery = {}) {
+    const response = await axios.get(endPoint, { params: sortQuery }, {
+        withCredentials: true
+    });
+    return response;
+}
 
 export async function createReview(clientData) {
     const token = localStorage.getItem("token");
-    console.log("TOKEN =", token); // 👈 เพิ่มบรรทัดนี้
     if (!token) {
         throw new Error("No token found");
     }
@@ -27,3 +32,16 @@ export async function createReview(clientData) {
     });
 }
 
+export async function updateReview(reviewId, clientData) {
+    const token = localStorage.getItem("token");
+
+    return axios.put(
+        `${endPoint}/${reviewId}`,
+        clientData,
+        {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        }
+    );
+}
