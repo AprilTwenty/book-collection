@@ -1,4 +1,5 @@
 import "./BookReviewSection.css";
+import { useEffect, useState } from "react";
 
 const CreateReviewForm = ({  
     comment,
@@ -6,8 +7,12 @@ const CreateReviewForm = ({
     rating,
     setRating,
     submitting,
+    myReview,
     handleSubmit
 }) => {
+    useEffect(() => {
+        setComment(myReview?.comment ?? "");
+    }, [myReview]);
     return (
             <form className="comment-box" onSubmit={handleSubmit} >
                 <textarea

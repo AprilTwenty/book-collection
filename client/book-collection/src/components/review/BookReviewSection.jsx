@@ -183,6 +183,7 @@ function BookReviewSection() {
                     rating={rating}
                     setRating={setRating}
                     submitting={submitting}
+                    myReview={myReview}
                     handleSubmit={handleSubmit}
                 />
             ) : (
