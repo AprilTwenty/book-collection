@@ -139,7 +139,7 @@ function BookReviewSection() {
                                 <img
                                     className="profile-img"
                                     src={
-                                        review.user_profile?.avatar_url || "/avatar-default.png"
+                                        review.users?.user_profile?.avatar_url || "/avatar-default.png"
                                     }
                                     alt="profile"
                                 />

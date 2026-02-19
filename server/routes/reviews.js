@@ -10,6 +10,20 @@ routerReviews.use((req, res, next) => {
     next();
 });
 
+const reviewInclude = {
+  users:{
+    select:{
+      user_id:true,
+      username:true,
+      user_profile:{
+        select:{
+          avatar_url:true
+        }
+      }
+    }
+  }
+};
+
 routerReviews.post("/", protect, reviewValidation, async (req, res) => {
     //1 access request
     const { book_id, rating, comment } = req.body;
@@ -47,14 +61,15 @@ routerReviews.post("/", protect, reviewValidation, async (req, res) => {
             });
         }
         const createReview = {
-            data: {
-                book_id: bookIdInt,
-                user_id: userIdInt,
-                rating: ratingInt,
-                comment
-            }
+            book_id: bookIdInt,
+            user_id: userIdInt,
+            rating: ratingInt,
+            comment
         };
-        const result = await prisma.reviews.create(createReview);
+        const result = await prisma.reviews.create({
+            data: createReview, 
+            include: reviewInclude
+    });
         /*
         const avg = await prisma.reviews.aggregate({
             where:{ book_id: bookIdInt },
@@ -88,7 +103,10 @@ routerReviews.get("/:reviewId", validateId("reviewId"), async (req, res) => {
         where: { review_id: reviewIdInt },
     };
     try {
-        const result = await prisma.reviews.findUnique(findId);
+            const result = await prisma.reviews.findUnique({
+            ...findId,
+            include: reviewInclude
+            });
         //3 response
         if (!result) {
             return res.status(404).json({
@@ -135,20 +153,8 @@ routerReviews.get("/", validateQuery, async (req, res) => {
 
         const result = await prisma.reviews.findMany({
             ...queryOption,
-            include:{
-                users:{
-                    select:{
-                    user_id:true,
-                    username:true,
-                    user_profile:{
-                        select:{
-                        avatar_url:true
-                        }
-                    }
-                    }
-                }
-            }
-        });
+            include: reviewInclude
+    });
         const count = await prisma.reviews.count({ where: searchCondition });
         //3 response
         return res.status(200).json({
@@ -194,13 +200,14 @@ routerReviews.put(
         });
       }
 
-      const result = await prisma.reviews.update({
-        where: { review_id: reviewIdInt },
-        data: {
-          ...(rating !== undefined && { rating }),
-          ...(comment !== undefined && { comment })
-        }
-      });
+        const result = await prisma.reviews.update({
+            where: { review_id: reviewIdInt },
+            data: {
+            ...(rating !== undefined && { rating }),
+            ...(comment !== undefined && { comment })
+            },
+            include: reviewInclude
+        });
 
       return res.status(200).json({
         success:true,
