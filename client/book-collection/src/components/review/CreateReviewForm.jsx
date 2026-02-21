@@ -12,6 +12,7 @@ const CreateReviewForm = ({
 }) => {
     useEffect(() => {
         setComment(myReview?.comment ?? "");
+        setRating(myReview?.rating ?? 5)
     }, [myReview]);
     return (
             <form className="comment-box" onSubmit={handleSubmit} >

@@ -32,7 +32,7 @@ useEffect(() => {
         sort: "rating",
         order: "desc",
         page: 1,
-        limit: 5
+        limit: 6
       });
       const allRes = await getBooks({
         page: currentPage,
