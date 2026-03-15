@@ -1,4 +1,11 @@
+main { 
+    position: relative; 
+    z-index: 1; 
+}
+
 .contrainer-page {
     display: flex;
     justify-content: center;
+    z-index: 0;
+    position: relative;
 }

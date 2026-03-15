@@ -1,3 +1,8 @@
+main { 
+    position: relative; 
+    z-index: 1; 
+}
+
 .header-nav {
     display: flex;
     width: 95%;
@@ -8,6 +13,8 @@
     border-radius: 50px;
     margin: 10px auto;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 0;
+    position: relative;
 }
 
 .nav-menu {

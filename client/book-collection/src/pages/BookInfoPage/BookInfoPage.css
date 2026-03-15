@@ -1,3 +1,7 @@
+main { 
+    position: relative; 
+    z-index: 1; 
+}
 .book-info-page {
     display: flex;
     flex-direction: column;
@@ -7,4 +11,7 @@
     gap: 10px;
     justify-content: center;
     justify-self: center;
+    z-index: 1;
+    position: relative;
 }
+
