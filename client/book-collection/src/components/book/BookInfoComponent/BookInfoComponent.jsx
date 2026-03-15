@@ -34,7 +34,13 @@ function BookInfo() {
         <div className="book-info-box">
             <div className='book-detail-box'>
                 <div className='book-img'>
-                    <img src={book.cover_url} alt="hero-img" onError={(e) => { e.currentTarget.src=noImg }}/>
+                    <img src={book.cover_url} 
+                        alt="hero-img" 
+                        onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = noImg;
+                        }}
+                    />
                 </div>
                 <div className='book-detail'>
                     <div className='book-detail-title'>

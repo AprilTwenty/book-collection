@@ -33,6 +33,7 @@ function BookSlider({ books }) {
                   src={book.cover_url}
                   alt={book.title}
                   onError={(e) => {
+                    e.currentTarget.onerror = null;
                     e.currentTarget.src = noImg;
                   }}
                 />
