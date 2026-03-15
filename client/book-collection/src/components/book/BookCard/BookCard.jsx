@@ -6,7 +6,12 @@ const BookCard = ({ book }) => {
     <Link to={`/books/${book.book_id}`} className="book-card">
       <div className="book-image-wrapper">
         
-        <img src={book.cover_url} alt={book.title} />
+        <img 
+          src={book.cover_url} 
+          alt={book.title}
+          loading="lazy"
+          onError={(e) => { e.target.src = "/default-cover.png" }}
+        />
         
       </div>
 
