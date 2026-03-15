@@ -22,5 +22,6 @@ body {
   height: 240px;
   background: linear-gradient(135deg, #4CAF50, #81C784);
   border-bottom-left-radius: 180px;
-  z-index: 0;
+  z-index: -1;
+  pointer-events: none; /* เพิ่มบรรทัดนี้ */
 }

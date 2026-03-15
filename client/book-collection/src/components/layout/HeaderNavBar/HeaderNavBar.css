@@ -1,6 +1,47 @@
-main { 
-    position: relative; 
-    z-index: 1; 
+/* Hamburger - ซ่อนบน desktop */
+.nav-hamburger {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    padding: 4px 8px;
+}
+
+/* Mobile dropdown */
+.nav-mobile-menu {
+    position: absolute;
+    top: 60px;
+    right: 0;
+    width: 30%;
+    min-width: 150px;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    padding: 12px 20px;
+    gap: 0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 20px;
+    z-index: 999;
+}
+
+.nav-mobile-menu a {
+    display: block;
+    font-size: 16px;
+    color: #1f2937;
+    text-decoration: none;
+    padding: 12px 8px;
+    border-bottom: 1px solid #f3f4f6;
+    width: 100%;
+}
+
+.nav-mobile-menu a:last-child {
+    border-bottom: none;
+}
+
+.nav-mobile-menu a:hover {
+    background: #f3f4f6;
+    border-radius: 8px;
 }
 
 .header-nav {
@@ -13,7 +54,6 @@ main {
     border-radius: 50px;
     margin: 10px auto;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    z-index: 1;
     position: relative;
 }
 
@@ -175,16 +215,21 @@ main {
     0 0 0 2px #ffffff,
     0 0 0 4px #1f2937;
 }
-
+@media (min-width: 769px) {
+  .nav-mobile-menu {
+    display: none !important;
+  }
+}
 @media (max-width: 768px) {
   .header-nav {
     width: 100%;
     padding: 8px 12px;
-    border-radius: 0;
+    border-radius: 50px;
     gap: 8px;
+    flex-wrap: wrap;  /* เพิ่มตรงนี้ด้วย */
   }
   .nav-menu {
-    gap: 12px;
+    display: none;
   }
   .nav-search__input {
     width: 80px;
@@ -193,4 +238,9 @@ main {
   .nav-search {
     margin-right: 8px;
   }
+  .nav-hamburger {
+    display: block;
+  }
+  /* ไม่ต้องมี .nav-mobile-menu ตรงนี้แล้ว */
+  /* ให้ React จัดการ show/hide ผ่าน isMenuOpen แทน */
 }

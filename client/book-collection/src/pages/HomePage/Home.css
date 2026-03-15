@@ -1,12 +1,7 @@
-main { 
-    position: relative; 
-    z-index: 1; 
-}
 .home-page {
   display: flex;
   flex-direction: column;
   gap: 80px;   /* ระยะห่างแต่ละ section */
-  z-index: 1;
   position: relative;
 }
 
