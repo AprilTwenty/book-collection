@@ -10,7 +10,10 @@ const BookCard = ({ book }) => {
           src={book.cover_url} 
           alt={book.title}
           loading="lazy"
-          onError={(e) => { e.target.src = "/default-cover.png" }}
+          onError={(e) => { 
+            e.target.onerror = null;
+            e.target.src = "/default-cover.png" 
+          }}
         />
         
       </div>
