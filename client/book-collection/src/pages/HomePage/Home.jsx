@@ -58,8 +58,7 @@ function HomePage() {
         }
         fetchBook();
     }, [currentPage]);
-
-    if (isLoading && allBooks.length === 0) return <div>กำลังโหลด...</div>;
+    
     if (error) return <div>{error}</div>;
 
     return (
