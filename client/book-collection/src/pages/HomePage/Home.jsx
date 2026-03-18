@@ -5,11 +5,9 @@ import { getBooks, getLatestBooks } from "../../api/books.js";
 import BookSlider from "../../components/layout/SliderBook/SliderBooks.jsx";
 import PopularBooks from "../../components/book/PopularBooks/PopularBooks.jsx";
 import BookCard from "../../components/book/BookCard/BookCard.jsx";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 function HomePage() {
-
-  const [books, setBooks] = useState([]);
   const [popularBooks, setPopularBooks ] = useState([]);
   const [latestBooks, setLatestBooks ] = useState([]);
   const [allBooks, setAllBooks] = useState([]);
@@ -24,10 +22,6 @@ useEffect(() => {
     try {
       setIsLoading(true);
       const latestRes = await getLatestBooks(5);
-      const response = await getBooks({
-        page: 1,
-        limit: 6
-      });
       const popularRes = await getBooks({
         sort: "rating",
         order: "desc",
@@ -44,12 +38,6 @@ useEffect(() => {
       } else {
         setError("รูปแบบข้อมูลไม่ถูกต้อง");
       }
-      if (response.data?.success) {
-        setBooks(response.data.data);
-      } else {
-        setError("รูปแบบข้อมูลไม่ถูกต้อง");
-      }
-
       if (popularRes.data?.success) {
         setPopularBooks(popularRes.data.data);
       } else {
@@ -57,8 +45,6 @@ useEffect(() => {
       }
       if (allRes.data?.success) {
         const total = allRes.data.total ?? allRes.data.data.length;
-        console.log("ALL RES:", allRes.data);
-
         setAllBooks(allRes.data.data);
         setTotalPages(Math.ceil(total / 12));
       }
@@ -73,7 +59,8 @@ useEffect(() => {
 
   fetchBook();
 }, [currentPage]);
-
+if (isLoading && allBooks.length === 0) return <div>กำลังโหลด...</div>
+if (error) return <div>{error}</div>
   return (
     <main className="home-page">
 
