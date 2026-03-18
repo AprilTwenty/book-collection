@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import './HeaderNavBar.css'
 import { useEffect, useRef } from 'react';
@@ -68,7 +68,7 @@ function HeaderNavBar() {
                 <Link to={"/"}>HOME</Link>
                 <Link to={"/books"}>Books</Link>
                 <Link to={"/categories"}>Categories</Link>
-                <Link to={"/aurhors"}>Authors</Link>
+                <Link to={"/authors"}>Authors</Link>
             </div>
 
             <div className='nav-actions'>
@@ -126,6 +126,8 @@ function HeaderNavBar() {
                             setIsProfileOpen(false);
                         }}
                         aria-label="toggle menu"
+                        aria-haspopup="true"
+                        aria-expanded={isMenuOpen}
                     >
                         {isMenuOpen ? '✕' : '☰'}
                     </button>
@@ -137,7 +139,7 @@ function HeaderNavBar() {
                         <Link to={"/"}>HOME</Link>
                         <Link to={"/books"}>Books</Link>
                         <Link to={"/categories"}>Categories</Link>
-                        <Link to={"/aurhors"}>Authors</Link>
+                        <Link to={"/authors"}>Authors</Link>
                         {!isLogin && (
                             <Link to={"/auth/login"}>Login</Link>
                         )}
