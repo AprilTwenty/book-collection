@@ -8,122 +8,119 @@ import BookCard from "../../components/book/BookCard/BookCard.jsx";
 import { useEffect, useState } from "react";
 
 function HomePage() {
-  const [popularBooks, setPopularBooks] = useState([]);
-  const [latestBooks, setLatestBooks] = useState([]);
-  const [allBooks, setAllBooks] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+    const [popularBooks, setPopularBooks] = useState([]);
+    const [latestBooks, setLatestBooks] = useState([]);
+    const [allBooks, setAllBooks] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null);
 
-  useEffect(() => {
-    async function fetchBook() {
-      try {
-        setIsLoading(true);
-        const latestRes = await getLatestBooks(5);
-        const popularRes = await getBooks({
-          sort: "rating",
-          order: "desc",
-          page: 1,
-          limit: 6,
-        });
-        const allRes = await getBooks({
-          page: currentPage,
-          limit: 12,
-        });
+    useEffect(() => {
+        async function fetchBook() {
+            try {
+                setIsLoading(true);
+                const latestRes = await getLatestBooks(5);
+                const popularRes = await getBooks({
+                    sort: "rating",
+                    order: "desc",
+                    page: 1,
+                    limit: 6,
+                });
+                const allRes = await getBooks({
+                    page: currentPage,
+                    limit: 12,
+                });
 
-        if (latestRes.data?.success) {
-          setLatestBooks(latestRes.data.data);
-        } else {
-          setError("รูปแบบข้อมูลไม่ถูกต้อง");
+                if (latestRes.data?.success) {
+                    setLatestBooks(latestRes.data.data);
+                } else {
+                    setError("รูปแบบข้อมูลไม่ถูกต้อง");
+                }
+
+                if (popularRes.data?.success) {
+                    setPopularBooks(popularRes.data.data);
+                } else {
+                    setError("รูปแบบข้อมูลไม่ถูกต้อง");
+                }
+
+                if (allRes.data?.success) {
+                    const total = allRes.data.total ?? allRes.data.data.length;
+                    setAllBooks(allRes.data.data);
+                    setTotalPages(Math.ceil(total / 12));
+                }
+            } catch (error) {
+                console.error(error);
+                setError("เกิดข้อผิดพลาดในการโหลดข้อมูล");
+            } finally {
+                setIsLoading(false);
+            }
         }
+        fetchBook();
+    }, [currentPage]);
 
-        if (popularRes.data?.success) {
-          setPopularBooks(popularRes.data.data);
-        } else {
-          setError("รูปแบบข้อมูลไม่ถูกต้อง");
-        }
+    if (isLoading && allBooks.length === 0) return <div>กำลังโหลด...</div>;
+    if (error) return <div>{error}</div>;
 
-        if (allRes.data?.success) {
-          const total = allRes.data.total ?? allRes.data.data.length;
-          setAllBooks(allRes.data.data);
-          setTotalPages(Math.ceil(total / 12));
-        }
-      } catch (error) {
-        console.error(error);
-        setError("เกิดข้อผิดพลาดในการโหลดข้อมูล");
-      } finally {
-        setIsLoading(false);
-      }
-    }
+    return (
+        <main className="home-page">
+            {/* HERO SECTION */}
+            <section className="hero-section">
+                <div className="hero-img-box">
+                    <img
+                        src={heroImgFront}
+                        alt="hero-img"
+                        className="hero-img img-front"
+                        loading="eager"
+                    />
+                    <img
+                        src={heroImgBack}
+                        alt="hero-img"
+                        className="hero-img img-back"
+                        loading="eager"
+                    />
+                </div>
+                <div className="info-card">
+                    <div className="slider-box">
+                        <BookSlider books={latestBooks} />
+                    </div>
+                </div>
+            </section>
+            {/* POPULAR BOOKS SECTION */}
+            <section className="popular-section">
+                <PopularBooks books={popularBooks} />
+            </section>
 
-    fetchBook();
-  }, [currentPage]);
+            {/* ALL BOOKS SECTION */}
+            <section className="all-books-section">
+                <h2>All Books</h2>
+                <div className="book-grid">
+                    {isLoading ? (
+                        <p>กำลังโหลดหนังสือ...</p>
+                    ) : (
+                        allBooks.map((book) => (
+                            <BookCard key={book.book_id} book={book} />
+                        ))
+                    )}
+                </div>
 
-  if (isLoading && allBooks.length === 0) return <div>กำลังโหลด...</div>;
-  if (error) return <div>{error}</div>;
+                {/* Pagination */}
+                <div className="pagination">
+                    {Array.from({ length: totalPages }, (_, index) => (
+                        <button
+                            key={index}
+                            disabled={isLoading}
+                            className={currentPage === index + 1 ? "active-page" : ""}
+                            onClick={() => setCurrentPage(index + 1)}
+                            >
+                            {index + 1}
+                        </button>
+                    ))}
+                </div>
+            </section>
 
-  return (
-    <main className="home-page">
-
-      {/* HERO SECTION */}
-      <section className="hero-section">
-        <div className="hero-img-box">
-          <img
-            src={heroImgFront}
-            alt="hero-img"
-            className="hero-img img-front"
-            loading="eager"
-          />
-          <img
-            src={heroImgBack}
-            alt="hero-img"
-            className="hero-img img-back"
-            loading="eager"
-          />
-        </div>
-        <div className="info-card">
-          <div className="slider-box">
-            <BookSlider books={latestBooks} />
-          </div>
-        </div>
-      </section>
-
-      {/* POPULAR BOOKS SECTION */}
-      <section className="popular-section">
-        <PopularBooks books={popularBooks} />
-      </section>
-
-      {/* ALL BOOKS SECTION */}
-      <section className="all-books-section">
-        <h2>All Books</h2>
-        <div className="book-grid">
-          {isLoading ? (
-            <p>กำลังโหลดหนังสือ...</p>
-          ) : (
-            allBooks.map((book) => (
-              <BookCard key={book.book_id} book={book} />
-            ))
-          )}
-        </div>
-
-        {/* Pagination */}
-        <div className="pagination">
-          {Array.from({ length: totalPages }, (_, index) => (
-            <button
-              key={index}
-              disabled={isLoading}
-              className={currentPage === index + 1 ? "active-page" : ""}
-              onClick={() => setCurrentPage(index + 1)}
-            >
-              {index + 1}
-            </button>
-          ))}
-        </div>
-      </section>
-
-    </main>
-  );
+        </main>
+    );
 }
 
 export default HomePage;
