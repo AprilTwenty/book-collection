@@ -53,10 +53,13 @@ app.use((err, req, res, next) => {
         "message": err.message,
         "stack": err.stack
     });
+    const status = err.statusCode || 500;
 
-    res.status(err.status || 500).json({
+    res.status(status).json({
         success: false,
-        message: err.message || "Internal Server Error"
+        message: status === 500
+        ? "Internal server error"
+        : err.message
     });
 });
 
