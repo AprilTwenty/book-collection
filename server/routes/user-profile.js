@@ -48,10 +48,17 @@ routerUserProfile.post("/", protect, userIdBodyValidation, firstNameValidation, 
         });
     }
 });
-routerUserProfile.patch("/:userId", protect, firstNameValidation, lastNameValidation, validateId("userId"), async (req, res) => {
+routerUserProfile.patch("/:userId", protect, validateId("userId"), async (req, res) => {
     //1 access request
     const { first_name, last_name, bio, avatar_url } = req.body;
     const userIdFromTokenInt = parseInt(req.user.user_id, 10);
+    // เช็คว่ามีอะไรส่งมาบ้าง
+    if (!first_name && !last_name && !bio && !avatar_url) {
+        return res.status(400).json({
+            success: false,
+            message: "ต้องส่งข้อมูลอย่างน้อย 1 อย่าง"
+        });
+    }
     //2 sql
     try {
         if (userIdFromTokenInt !== req.params.userId) {
@@ -145,7 +152,6 @@ routerUserProfile.delete("/:userId", protect, validateId("userId"), async (req, 
             "data": result
         });
     } catch (error) {
-            console.error(error)
         return res.status(500).json({
             "success": false,
             "message": "Internal server error. Please try again later"

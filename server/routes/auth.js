@@ -1,121 +1,94 @@
 import { Router } from "express";
 import { loginValidation, postUserValidation } from "../middleware/validateData.js"
-import bcrypt from "bcrypt";
+import bcrypt, { hash } from "bcrypt";
 import jwt from "jsonwebtoken";
 import prisma from "../prisma/client.js";
+import asyncHandler from "../utils/asyncHandler.js";
 
 const routerAuth = Router();
 
-routerAuth.post("/register", postUserValidation, async (req, res) => {
-    //1 access request
+routerAuth.post("/register", postUserValidation, asyncHandler(async (req, res) => {
+    //1 access req
     const { username, email, password } = req.body;
-    try {
-        const salt = await bcrypt.genSalt(10);
-        const passwordHash = await bcrypt.hash(password, salt)
-        //2 sql
-        const createUser = {
+    const passwordHash = await bcrypt.hash(password, 10);
+    //2 
+    const existingUser = await prisma.users.findFirst({
+        where: {
+            OR: [
+                { username },
+                { email }
+            ]
+        }
+    });
+    if (existingUser) {
+        const error = new Error("Username or email already exist");
+        error.status = 409;
+        throw error;
+    }
+    const newUser = await prisma.$transaction(async (tx) => {
+        const user = await tx.users.create({
             data: {
                 username,
                 email,
-                password_hash: passwordHash,
-                created_at: new Date(),
-                updated_at: new Date()
+                password_hash: passwordHash
             }
-        };
-        const collisionUser = await prisma.users.findUnique({
-            where: { username }
         });
-        if (collisionUser) {
-            return res.status(409).json({
-                "success": false,
-                "message": "ชื่อ username " + collisionUser.username + " มีอยู่ในระบบแล้ว"
-            });
-        }
-        const collisionEmail = await prisma.users.findUnique({
-            where: { email }
-        });
-        if (collisionEmail) {
-            return res.status(409).json({
-                "success": false,
-                "message": "ชื่อ email " + collisionEmail.email + " มีอยู่ในระบบแล้ว"
-            });
-        }
-        // const result = await prisma.users.create(createUser); //old version not create user_profile
-        const result = await prisma.$transaction(async (tx) => {
-            const user = await tx.users.create(createUser);
-            await tx.user_profile.create({
-                data: {
+        await tx.user_profile.create({
+            data: {
                 user_id: user.user_id,
                 avatar_url: "/default-avatar.png"
-                }
-            });
-            return user;
+            }
         });
-        
-        //3 response
-        return res.status(201).json({
-            "success": true,
-            "message": "User registered successfully",
-            "data": result
-        });
-    } catch (error) {
-        return res.status(500).json({
-            "success": false,
-            "message": "Internal server error. Please try again later"
-        });
-    }
-}); 
-routerAuth.post("/login", loginValidation, async (req, res) => {
+        return user;
+    });
+    return res.status(201).json({
+        success: true,
+        message: "User registered successfully",
+        data: {
+            user_id: newUser.user_id,
+            username: newUser.username,
+            email: newUser.email
+        }
+    });
+}));
 
+routerAuth.post("/login", loginValidation, asyncHandler(async (req, res) => {
     const { username, password } = req.body;
 
-    try {
-        const user = await prisma.users.findUnique({
-            where: { username }
-        });
-
-        if (!user) {
-            return res.status(401).json({
-                success: false,
-                message: `ข้อมูล username ${username} ไม่ถูกต้อง`
-            });
-        }
-
-        const isValidPassword = await bcrypt.compare(
-            password,
-            user.password_hash
-        );
-
-        if (!isValidPassword) {
-            return res.status(401).json({
-                success: false,
-                message: "ข้อมูล password ไม่ถูกต้อง"
-            });
-        }
-
-        const token = jwt.sign(
-            {
-                user_id: user.user_id,
-                username: user.username,
-                email: user.email
-            },
-            process.env.SECRET_KEY,
-            { expiresIn: "15m" }
-        );
-
-        return res.status(200).json({
-            success: true,
-            message: "Login successfully",
-            token: token 
-        });
-
-    } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: "internal server error"
-        });
+    const user = await prisma.users.findUnique({
+        where: { username }
+    });
+    if (!user) {
+        const error = new Error("Invalid username or password");
+        error.status = 401;
+        throw error;
     }
-});
-
-
+    const isValidPassword = await bcrypt.compare(password, user.password_hash);
+    if (!isValidPassword) {
+        const error = new Error("Invalid username or password");
+        error.status = 401
+        throw error;
+    }
+    if (!process.env.SECRET_KEY) {
+        const error = new Error("Server configuration error");
+        error.status = 500;
+        throw error;
+    }
+    const token = jwt.sign(
+        {
+            user_id: user.user_id,
+            username: user.username,
+            email: user.email
+        },
+        process.env.SECRET_KEY,
+        {
+            expiresIn: "15m"
+        }
+    );
+    return res.status(200).json({
+        success: true,
+        message: "Login successfully",
+        token
+    });
+}));
 export default routerAuth;
