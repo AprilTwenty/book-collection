@@ -4,6 +4,7 @@ import bcrypt, { hash } from "bcrypt";
 import jwt from "jsonwebtoken";
 import prisma from "../prisma/client.js";
 import asyncHandler from "../utils/asyncHandler.js";
+import AppError from "../utils/AppError.js";
 
 const routerAuth = Router();
 
@@ -21,9 +22,7 @@ routerAuth.post("/register", postUserValidation, asyncHandler(async (req, res) =
         }
     });
     if (existingUser) {
-        const error = new Error("Username or email already exist");
-        error.status = 409;
-        throw error;
+        throw new AppError("Username or email already exist", 409);
     }
     const newUser = await prisma.$transaction(async (tx) => {
         const user = await tx.users.create({
@@ -59,21 +58,17 @@ routerAuth.post("/login", loginValidation, asyncHandler(async (req, res) => {
         where: { username }
     });
     if (!user) {
-        const error = new Error("Invalid username or password");
-        error.status = 401;
-        throw error;
+        throw new AppError("Invalid username or password", 401);
     }
+
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
     if (!isValidPassword) {
-        const error = new Error("Invalid username or password");
-        error.status = 401
-        throw error;
+        throw new AppError("Invalid username or password", 401);
     }
     if (!process.env.SECRET_KEY) {
-        const error = new Error("Server configuration error");
-        error.status = 500;
-        throw error;
+        throw new AppError("Sever configuration error", 500);
     }
+
     const token = jwt.sign(
         {
             user_id: user.user_id,
