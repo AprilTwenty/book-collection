@@ -2,7 +2,6 @@ import jwt from "jsonwebtoken";
 
 
 export const protect = (req, res, next) => {
-    console.log("🔥 protect middleware called");
     const authHeader = req.headers.authorization;
 
     if (!authHeader?.startsWith("Bearer ")) {
@@ -18,7 +17,6 @@ export const protect = (req, res, next) => {
 
         // ⭐ แก้ตรงนี้
         req.user = payload;
-        console.log("payload:", payload);
         next();
     } catch (error) {
         console.log("❌ JWT ERROR:", error.name, error.message);

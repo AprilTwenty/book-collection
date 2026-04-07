@@ -16,24 +16,8 @@ dotenv.config();
 const app = express();
 const PORT = 4000;
 
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
+app.use(cors());
 
-    if (
-      origin.includes("github.dev") ||
-      origin === "http://localhost:5173" ||
-      origin === "https://book-collection-front-end.vercel.app"
-    ) {
-      callback(null, true);
-    } else {
-      callback(new Error("CORS blocked"));
-    }
-  },
-  credentials: true
-}));
-
-app.options(/.*/, cors());
 app.use(express.json());
 app.use("/books", routerBooks);
 app.use("/authors", routerAuthors);
@@ -48,12 +32,32 @@ app.use("/userprofile", routerUserProfile);
 swaggerSetup(app); // เปิดใช้งาน Swagger UI
 
 app.get('/', (req, res) => {
-  res.json(
-    {
-      success: true,
-      message: 'API Running'
-    }
-  );
+ 
+    res.json(
+        {
+            success: true,
+            message: 'API Running'
+        }
+    );
+});
+
+app.use((req, res) => {
+    res.status(404).json({
+        success: false,
+        message: "Route not found"
+    });
+});
+
+app.use((err, req, res, next) => {
+    console.error("🔥 ERROR:", {
+        "message": err.message,
+        "stack": err.stack
+    });
+
+    res.status(err.status || 500).json({
+        success: false,
+        message: err.message || "Internal Server Error"
+    });
 });
 
 /* ปิดเพื่อ deploy ขึ้น vercel ไม่สามารถใช้ listen ได้
