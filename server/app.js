@@ -11,7 +11,6 @@ import routerUserProfile from "./routes/user-profile.js";
 import swaggerSetup from "./swagger.js";
 import cors from "cors";
 import dotenv from 'dotenv';
-import { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
 import AppError from "./utils/AppError.js";
 
 dotenv.config();
