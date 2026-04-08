@@ -1,16 +1,22 @@
 import jwt from "jsonwebtoken";
+import asyncHandler from "../utils/asyncHandler";
+import AppError from "../utils/AppError";
 
 
-export const protect = (req, res, next) => {
+export const protect = asyncHandler(async (req, res, next) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader?.startsWith("Bearer ")) {
-        return res.status(401).json({
-            success: false,
-            message: "Unauthorized"
-        });
+        throw new AppError("Unauthorized", 401);
     }
-
+    const token = authHeader.split(" ")[1].trim();
+    if (!process.env.SECRET_KEY) {
+        throw new AppError("Server configuration error", 500);
+    }
+    const payload = jwt.verify(token, process.env.SECRET_KEY);
+    req.user = payload;
+    next();
+    /*
     try {
         const token = authHeader.split(" ")[1].trim();
         const payload = jwt.verify(token, process.env.SECRET_KEY);
@@ -25,8 +31,6 @@ export const protect = (req, res, next) => {
             success: false,
             message: "Invalid token"
     });
-}
-
-    
-};
+    */
+});
 

@@ -11,6 +11,8 @@ import routerUserProfile from "./routes/user-profile.js";
 import swaggerSetup from "./swagger.js";
 import cors from "cors";
 import dotenv from 'dotenv';
+import { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
+import AppError from "./utils/AppError.js";
 
 dotenv.config();
 const app = express();
@@ -53,6 +55,12 @@ app.use((err, req, res, next) => {
         "message": err.message,
         "stack": err.stack
     });
+    if (err.name === "JsonWebTokenError") {
+        err = new AppError("Invalid token", 401);
+    }
+    if (err.name === "TokenExpiredError") {
+        err = new AppError("Expired token", 401);
+    }
     const status = err.statusCode || 500;
 
     res.status(status).json({
