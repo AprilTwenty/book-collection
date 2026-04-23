@@ -100,6 +100,9 @@ routerBooks.get("/:bookId", async (req, res) => {
 routerBooks.get("/", validateQuery, async (req, res) => {
   // 1️⃣ access req
   const { name, category, author, page, limit, sort, order } = req.query;
+    if (limit === undefined && isNaN(limit)) limit = 25;
+    if (limit < 1) limit = 1;
+    if (limit > 50) limit = 50;
 
   const allowedSortFields = [
     "title",

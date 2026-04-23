@@ -1,60 +1,51 @@
+import { parsePositiveInt } from "../utils/validators.js";
 
 //----------------------------- Data for every table--------------
 export function validateId(paramName) {
     return (req, res, next) => {
-        const idFromClient = req.params[paramName];
-        const idInt = parseInt(idFromClient, 10)
-        if (isNaN(idInt) || idInt <= 0) {
-            return res.status(400).json({
-                "success": false,
-                "message": "รูปแบบข้อมูล " + paramName + " ไม่ถูกต้อง"
-            });
+        try {
+            req.params[paramName] = parsePositiveInt(req.params[paramName], paramName);
+            next();
+        } catch (error) {
+            next(error);
         }
-        req.params[paramName] = idInt;
-        next();
+
     }
 };
 
 export const validateQuery = (req, res, next) => {
-    const { page, limit} = req.query;
-    if (page === undefined && limit === undefined) {
-        return next();
-    }
-    if (page !== undefined) {
-        const pageInt = parseInt(page, 10);
-        if (isNaN(pageInt) || pageInt <= 0) {
-            return res.status(400).json({
-                "success": false,
-                "message": "รูปแบบข้อมูล page ไม่ถูกต้อง"
-            });
+    try {
+        const { page, limit} = req.query;
+
+        if (page === undefined && limit === undefined) {
+            return next();
         }
-        req.query.page = pageInt;
-    }
-    if (limit !== undefined) {
-        const limitInt = parseInt(limit, 10);
-        if (isNaN(limitInt) || limitInt <= 0) {
-            return res.status(400).json({
-                "success": false,
-                "message": "รูปแบบข้อมูล limit ไม่ถูกต้อง"
-            });
+        if (page !== undefined) {
+            req.query.page = parsePositiveInt(page, "page");
         }
-        req.query.limit = limitInt;
+        if (limit !== undefined) {
+            const parsed = parsePositiveInt(limit, "limit");
+            req.query.limit = Math.min(parsed, 500);
+        }
+        next();
+    } catch (error) {
+        next(error);
     }
-    next();
-}
+
+};
+
 export const userIdQueryValidation = (req, res, next) => {
+    try {
         const { user_id }  = req.query;
         if (user_id) {
-            const userIdInt = parseInt(user_id, 10);
-            if (isNaN(userIdInt) || userIdInt < 1) {
-                return res.status(400).json({
-                    "success": false,
-                    "message": "ข้อมูล user ไม่ถูกต้อง"
-                });
-            }
+             req.query.user_id = parsePositiveInt(user_id, "user_id");
         }
-    next();
-};
+        next();
+    } catch (error) {
+        next(error);
+    }
+}
+
 export const userIdBodyValidation = (req, res, next) => {
         const { user_id }  = req.body;
         const userIdInt = parseInt(user_id, 10);
