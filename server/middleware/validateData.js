@@ -1,3 +1,4 @@
+import AppError from "../utils/AppError.js";
 import { parsePositiveInt } from "../utils/validators.js";
 
 //----------------------------- Data for every table--------------
@@ -47,21 +48,16 @@ export const userIdQueryValidation = (req, res, next) => {
 }
 
 export const userIdBodyValidation = (req, res, next) => {
+    try {
         const { user_id }  = req.body;
-        const userIdInt = parseInt(user_id, 10);
         if (!user_id) {
-            return res.status(400).json({
-                "success": false,
-                "message": "ข้อมูลที่ต้องการมีไม่ครบ"
-            });
+            throw new AppError(`ข้อมูลที่ต้องการมีไม่ครบ`, 400);
         }
-        if (isNaN(userIdInt) || userIdInt < 1) {
-            return res.status(400).json({
-                "success": false,
-                "message": "ข้อมูล user ไม่ถูกต้อง"
-            });
-        }
-    next();
+        req.body.user_id = parsePositiveInt(user_id, "user");
+        next();
+    } catch (error) {
+        next(error);
+    }
 };
 //-------------------------------- books validation -----------------------------------
 export const postBookValidation = (req, res, next) => {
