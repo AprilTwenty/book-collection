@@ -9,14 +9,10 @@ export async function getReviewById (id) {
 }
 
 export async function getReviewsByBookId(bookId) {
-    return axios.get(`${endPoint}?book_id=${bookId}`, {
-        withCredentials: true
-    });
+    return axios.get(`${endPoint}?book_id=${bookId}`);
 }
 export async function getReviews (sortQuery = {}) {
-    const response = await axios.get(endPoint, { params: sortQuery }, {
-        withCredentials: true
-    });
+    const response = await axios.get(endPoint, { params: sortQuery });
     return response;
 }
 
