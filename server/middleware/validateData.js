@@ -1,5 +1,5 @@
 import AppError from "../utils/AppError.js";
-import { parsePositiveInt, parsePositiveIntArray, validateRequired } from "../utils/validators.js";
+import { parsePositiveInt, parsePositiveIntArray, validateRequired, validateStringLength } from "../utils/validators.js";
 
 //----------------------------- Data for every table--------------
 export function validateId(paramName) {
@@ -84,20 +84,14 @@ export const postBookValidation = (req, res, next) => {
 
 //------------------------------authors table--------------------------
 export const postAuthorValidation = (req, res, next) => {
-    const { name, bio } = req.body;
-    if (!name) {
-        return res.status(400).json({
-            "success": false,
-            "message": "ข้อมูลที่ต้องระบุ มีไม่ครบ"
-        });
+    try {
+        const { name } = req.body;
+        validateRequired(name, "ชื่อผู้แต่ง");
+        validateStringLength(name, "ชื่อผู้แต่ง", 4, 29);
+        next();
+    } catch (error) {
+        next(error);
     }
-    if (name.length <= 3 || name.length >= 30 || typeof name !== 'string') {
-        return res.status(400).json({
-            "success": false,
-            "message": "รูปแบบข้อมูลไม่ถูกต้อง"
-        });
-    }
-    next();
 }
 //----------------------------------category table--------------------
 export const postCategoryValidation = (req, res, next) => {
