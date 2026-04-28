@@ -8,6 +8,14 @@ export function parsePositiveInt(value, fieldName = "value") {
     return num;
 }
 
+export function parsePositiveIntArray(arr, fieldName) {
+    if (!Array.isArray(arr)) {
+        throw new AppError(`${fieldName} ต้องเป็น array`, 400);
+    }
+    const parsed = arr.map((item) => parsePositiveInt(item, fieldName));
+    return parsed;
+};
+
 export function validateRequired(value, fieldName) {
     if (value === undefined || value === null || 
         (typeof value === "string" && value.trim() === "")
