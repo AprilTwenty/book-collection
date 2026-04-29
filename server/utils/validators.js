@@ -32,3 +32,17 @@ export function validateStringLength(value, fieldName, min, max) {
         throw new AppError(`${fieldName} ต้องมี ${min}-${max} ตัวอักษร`, 400);
     }
 }
+
+export function validateEmail(value, fieldName = "email") {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(value)) { 
+        throw new AppError(`${fieldName} รูปแบบไม่ถูกต้อง`, 400);
+    }
+}
+
+export function validateUrl(value, fieldName = "url") {
+    const urlRegex = /^https?:\/\/.+\..+/;
+    if (!urlRegex.test(value)) {
+        throw new AppError(`${fieldName} ต้องเป็น URL ที่ถูกต้อง`, 400);
+    }
+}

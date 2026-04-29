@@ -1,5 +1,5 @@
 import AppError from "../utils/AppError.js";
-import { parsePositiveInt, parsePositiveIntArray, validateRequired, validateStringLength } from "../utils/validators.js";
+import { parsePositiveInt, parsePositiveIntArray, validateRequired, validateStringLength, validateEmail, validateUrl } from "../utils/validators.js";
 
 //----------------------------- Data for every table--------------
 export function validateId(paramName) {
@@ -67,8 +67,8 @@ export const postBookValidation = (req, res, next) => {
         if (published_year) {
             req.body.published_year = parsePositiveInt(published_year, "published_year");
         }
-        if (cover_url && !/^https?:\/\/.+\..+/.test(cover_url)) {
-            throw new AppError(`cover_url ต้องเป็น URL`, 400);
+        if (cover_url) {
+            validateUrl(cover_url, "cover_url");
         }
         if (author_ids) {
             req.body.author_ids = parsePositiveIntArray(author_ids, "author_ids");
@@ -112,33 +112,18 @@ export const postCategoryValidation = (req, res, next) => {
 }
 //------------------------------------ users ---------------------------------------------
 export const postUserValidation = (req, res, next) => {
-    const { username, email, password } = req.body;
-    if (!username || !email || !password) {
-        return res.status(400).json({
-            "success": false,
-            "message": "ข้อมูลที่ต้องการมีไม่ครบ"
-        });
+    try {
+        const { username, email, password } = req.body;
+        validateRequired(username, "username");
+        validateRequired(email, "email");
+        validateRequired(password, "password");
+        validateStringLength(username, "username", 3, 20);
+        validateStringLength(password, "password", 8, 40);
+        validateEmail(email, "email");
+        next()
+    } catch (error) {
+        next(error);
     }
-    if (username.length < 3 || username.length > 20 || typeof username !== 'string') {
-        return res.status(400).json({
-            "success": false,
-            "message": "รูปแบบข้อมูลไม่ถูกต้อง"
-        });
-    }
-    if (password.length < 8 || password.length > 40) {
-        return res.status(400).json({
-            "success": false,
-            "message": "รูปแบบข้อมูลไม่ถูกต้อง"
-        });
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-        return res.status(400).json({
-            "success": false,
-            "message": "รูปแบบ email ไม่ถูกต้อง"
-        });
-    }
-    next();
 };
 
 export const loginValidation = (req, res, next) => {
