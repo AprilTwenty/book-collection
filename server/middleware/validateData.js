@@ -95,26 +95,20 @@ export const postAuthorValidation = (req, res, next) => {
 }
 //----------------------------------category table--------------------
 export const postCategoryValidation = (req, res, next) => {
-    const { name, description, parent_category_id } = req.body;
-    if (!name) {
-        return res.status(400).json({
-            "success": false,
-            "message": "ข้อมูลที่ต้องระบุ มีไม่ครบ"
-        });
+    try {
+        const { name, description, parent_category_id } = req.body;
+        validateRequired(name, "category name");
+        validateStringLength(name, "category name", 3, 30);
+        if (description !== undefined) {
+            validateStringLength(description, "description", 0, 999);
+        }
+        if (parent_category_id !== undefined) {
+            req.body.parent_category_id = parsePositiveInt(parent_category_id, "parent_category_id");
+        }
+        next();
+    } catch (error) {
+        next(error);
     }
-    if (name.length < 3 || name.length > 30 || typeof name !== 'string') {
-        return res.status(400).json({
-            "success": false,
-            "message": "รูปแบบข้อมูลไม่ถูกต้อง"
-        });
-    }
-    if (description !== undefined && description.length >= 1000) {
-        return res.status(400).json({
-            "success": false,
-            "message": "ข้อความ description ยาวเกินที่กำหนด 1000 ตัวอักษร"
-        });
-    }
-    next();
 }
 //------------------------------------ users ---------------------------------------------
 export const postUserValidation = (req, res, next) => {
