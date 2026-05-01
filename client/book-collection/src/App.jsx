@@ -21,10 +21,13 @@ function App() {
         <HeaderNavBar />
         <Routes>
           <Route path='/' element={ <HomePage /> } /> 
-          <Route path='/books/:id' element={ <ProtectedRoute><BookInfoPage /></ProtectedRoute> } />
+          <Route path='/books/:id' element={ <BookInfoPage /> } />
           <Route path="/books" element={<BooksPage />} />
           <Route path='/auth/register' element={ <RegisterPage /> } />
           <Route path="/auth/login" element={ isLogin ? <Navigate to="/" replace /> : <LoginPage /> } />
+          {/*}
+          <Route path="/profile" element={ <ProtectedRoute><ProfilePage /></ProtectedRoute> } />
+          {*/}
         </Routes>
       </BrowserRouter>
     </div>
