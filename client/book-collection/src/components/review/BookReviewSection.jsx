@@ -110,9 +110,9 @@ function BookReviewSection() {
                 setLoading(false);
             }
         }
-
         fetchReviews();
     }, [id]);
+
     useEffect(() => {
         if (!user?.user_id) return;
 
@@ -176,7 +176,11 @@ function BookReviewSection() {
                     ))
                 )}
             </div>
-            {(!myReview || editing) ? (
+            {!user?.user_id ? (
+                <div>
+                    ต้องเข้าสู่ระบบก่อนถึงใช้งานส่วนนี้ได้
+                </div>
+            ) : (!myReview || editing) ? (
                 <CreateReviewForm
                     comment={comment}
                     setComment={setComment}
