@@ -114,7 +114,10 @@ function BookReviewSection() {
     }, [id]);
 
     useEffect(() => {
-        if (!user?.user_id) return;
+        if (!user?.user_id) {
+            setMyReview(null);
+            return;
+        }
 
         const found = reviews.find(
             r => r.user_id === user.user_id
@@ -177,7 +180,7 @@ function BookReviewSection() {
                 )}
             </div>
             {!user?.user_id ? (
-                <div>
+                <div className="review-box">
                     ต้องเข้าสู่ระบบก่อนถึงใช้งานส่วนนี้ได้
                 </div>
             ) : (!myReview || editing) ? (
@@ -193,7 +196,12 @@ function BookReviewSection() {
             ) : (
                 <MyReviewCard
                     review={myReview}
-                    onEdit={() => setEditing(true)}
+                    onEdit={() => {
+                        setComment(myReview.comment || "");
+                        setRating(myReview.rating || 5);
+                        setEditing(true);
+                        } 
+                    }
                 />
             )}
             {/*}
