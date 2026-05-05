@@ -234,6 +234,9 @@ routerBooks.get("/", validateQuery, asyncHandler(async (req, res) => {
     let total = 0;
     // sort by rating
     if (sort === "rating") {
+        const nameParam = name || null;
+        const authorParam = author || null;
+        const categoryParam = category || null;
         data = await prisma.$queryRaw`
             SELECT
                 b.book_id,
@@ -269,20 +272,20 @@ routerBooks.get("/", validateQuery, asyncHandler(async (req, res) => {
             LEFT JOIN categories c ON c.category_id = bc.category_id
 
             WHERE
-                (${name}::text IS NULL OR b.title ILIKE '%' || ${name}::text || '%')
-                AND (${author}::text IS NULL OR EXISTS (
+                (${nameParam} IS NULL OR b.title ILIKE '%' || ${nameParam} || '%')
+                AND (${authorParam} IS NULL OR EXISTS (
                     SELECT 1
                     FROM book_authors ba2
                     JOIN authors a2 ON a2.author_id = ba2.author_id
                     WHERE ba2.book_id = b.book_id
-                    AND a2.name ILIKE '%' || ${author}::text || '%'
+                    AND a2.name ILIKE '%' || ${authorParam} || '%'
                 ))
-                AND (${category}::text IS NULL OR EXISTS (
+                AND (${categoryParam} IS NULL OR EXISTS (
                     SELECT 1
                     FROM book_categories bc2
                     JOIN categories c2 ON c2.category_id = bc2.category_id
                     WHERE bc2.book_id = b.book_id
-                    AND c2.name ILIKE '%' || ${category}::text || '%'
+                    AND c2.name ILIKE '%' || ${categoryParam} || '%'
                 ))
 
             GROUP BY b.book_id, r.avg_rating
@@ -295,20 +298,20 @@ routerBooks.get("/", validateQuery, asyncHandler(async (req, res) => {
             SELECT COUNT(*)::int as count
             FROM books b
             WHERE
-                (${name}::text IS NULL OR b.title ILIKE '%' || ${name}::text || '%')
-                AND (${author}::text IS NULL OR EXISTS (
+                (${nameParam} IS NULL OR b.title ILIKE '%' || ${nameParam} || '%')
+                AND (${authorParam} IS NULL OR EXISTS (
                     SELECT 1
                     FROM book_authors ba2
                     JOIN authors a2 ON a2.author_id = ba2.author_id
                     WHERE ba2.book_id = b.book_id
-                    AND a2.name ILIKE '%' || ${author}::text || '%'
+                    AND a2.name ILIKE '%' || ${authorParam} || '%'
                 ))
-                AND (${category}::text IS NULL OR EXISTS (
+                AND (${categoryParam} IS NULL OR EXISTS (
                     SELECT 1
                     FROM book_categories bc2
                     JOIN categories c2 ON c2.category_id = bc2.category_id
                     WHERE bc2.book_id = b.book_id
-                    AND c2.name ILIKE '%' || ${category}::text || '%'
+                    AND c2.name ILIKE '%' || ${categoryParam} || '%'
                 ));
         `;
         total = totalResult[0]?.count || 0;
