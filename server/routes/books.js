@@ -304,7 +304,7 @@ routerBooks.get("/", validateQuery, asyncHandler(async (req, res) => {
             offset
         );
         const totalQuery = `
-            SELECT COUNT(*)::int as count
+            SELECT COUNT(*)::bigint as count
             FROM books b
             WHERE
                 ($1::text IS NULL OR b.title ILIKE '%' || $1 || '%')
@@ -330,7 +330,7 @@ routerBooks.get("/", validateQuery, asyncHandler(async (req, res) => {
             authorParam,
             categoryParam
         );
-        total = totalResult[0]?.count || 0;
+        total = Number(totalResult[0]?.count ?? 0);
     } else {
         // normal sort 
         const allowedSortFields = [
