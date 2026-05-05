@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { postBookValidation, validateQuery } from "../middleware/validateData.js";
 import prisma from "../prisma/client.js";
+import asyncHandler from "../utils/asyncHandler.js";
+import { Prisma } from "@prisma/client";
 
 const routerBooks = Router();
 
@@ -97,73 +99,74 @@ routerBooks.get("/:bookId", async (req, res) => {
         });
     }
 });
+/*
 routerBooks.get("/", validateQuery, async (req, res) => {
-  // 1️⃣ access req
-  const { name, category, author, page, limit, sort, order } = req.query;
-    if (limit === undefined && isNaN(limit)) limit = 25;
-    if (limit < 1) limit = 1;
-    if (limit > 50) limit = 50;
+    // 1️⃣ access req
+    const { name, category, author, page, limit, sort, order } = req.query;
+    let limitInt = parseInt(limit, 10);
 
-  const allowedSortFields = [
-    "title",
-    "published_year",
-    "created_at",
-    "rating"
-  ];
+    if (!limit || isNaN(limitInt)) limitInt = 25;
+    if (limitInt < 1) limitInt = 1;
+    if (limitInt > 50) limitInt = 50;
 
-  const safeSort = allowedSortFields.includes(sort) ? sort : "created_at";
-  const safeOrder = order === "asc" ? "asc" : "desc";
+    const allowedSortFields = [
+        "title",
+        "published_year",
+        "created_at",
+        "rating"
+    ];
+    const safeSort = allowedSortFields.includes(sort) ? sort : "created_at";
+    const safeOrder = order === "asc" ? "asc" : "desc";
 
-  let filters = {};
+    let filters = {};
+    if (name) {
+        filters.title = { contains: name, mode: "insensitive" };
+    }
 
-  if (name) {
-    filters.title = { contains: name, mode: "insensitive" };
-  }
+    if (author) {
+        filters.book_authors = {
+        some: {
+            authors: { name: { contains: author, mode: "insensitive" } }
+        }
+        };
+    }
 
-  if (author) {
-    filters.book_authors = {
-      some: {
-        authors: { name: { contains: author, mode: "insensitive" } }
-      }
+    if (category) {
+        filters.book_categories = {
+        some: {
+            categories: { name: { contains: category, mode: "insensitive" } }
+        }
+        };
+    }
+
+    // 2️⃣ prepare query option
+    let queryOption = {
+        where: filters
     };
-  }
 
-  if (category) {
-    filters.book_categories = {
-      some: {
-        categories: { name: { contains: category, mode: "insensitive" } }
-      }
-    };
-  }
+    // pagination
+    if (page !== undefined && limit !== undefined) {
+        const pageInt = parseInt(page, 10);
+        const limitInt = parseInt(limit, 10);
 
-  // 2️⃣ prepare query option
-  let queryOption = {
-    where: filters
-  };
+        queryOption.skip = (pageInt - 1) * limitInt;
+        queryOption.take = limitInt;
+    }
 
-  // pagination
-  if (page !== undefined && limit !== undefined) {
-    const pageInt = parseInt(page, 10);
-    const limitInt = parseInt(limit, 10);
+    // sort ปกติ (ยกเว้น rating)
+    if (safeSort !== "rating") {
+        queryOption.orderBy = {
+        [safeSort]: safeOrder
+        };
+    }
 
-    queryOption.skip = (pageInt - 1) * limitInt;
-    queryOption.take = limitInt;
-  }
-
-  // sort ปกติ (ยกเว้น rating)
-  if (safeSort !== "rating") {
-    queryOption.orderBy = {
-      [safeSort]: safeOrder
-    };
-  }
-
-  try {
-    // include relations
-    queryOption.include = {
-      book_authors: { include: { authors: true } },
-      book_categories: { include: { categories: true } },
-      reviews: { select: { rating: true } }
-    };
+    try {
+        // include relations
+        queryOption.include = {
+            book_authors: { include: { authors: true } },
+            book_categories: { include: { categories: true } },
+            reviews: { select: { rating: true } }
+        };
 
     const result = await prisma.books.findMany(queryOption);
 
@@ -173,52 +176,236 @@ routerBooks.get("/", validateQuery, async (req, res) => {
 
     // 3️⃣ map result
     let simpleResult = result.map((data) => {
-      const avgRating =
-        data.reviews.length > 0
-          ? data.reviews.reduce((sum, r) => sum + r.rating, 0) /
-            data.reviews.length
-          : 0;
+        const avgRating =
+            data.reviews.length > 0
+            ? data.reviews.reduce((sum, r) => sum + r.rating, 0) /
+                data.reviews.length
+            : 0;
 
-      return {
-        book_id: data.book_id,
-        title: data.title,
-        description: data.description,
-        isbn: data.isbn,
-        publisher: data.publisher,
-        published_year: data.published_year,
-        cover_url: data.cover_url,
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-        author: data.book_authors.map((a) => a.authors.name),
-        category: data.book_categories.map((c) => c.categories.name),
-        rating: avgRating
-      };
+        return {
+            book_id: data.book_id,
+            title: data.title,
+            description: data.description,
+            isbn: data.isbn,
+            publisher: data.publisher,
+            published_year: data.published_year,
+            cover_url: data.cover_url,
+            created_at: data.created_at,
+            updated_at: data.updated_at,
+            author: data.book_authors.map((a) => a.authors.name),
+            category: data.book_categories.map((c) => c.categories.name),
+            rating: avgRating
+        };
     });
 
     // 4️⃣ sort by rating (หลังจากมี simpleResult แล้ว)
     if (safeSort === "rating") {
-      simpleResult.sort((a, b) =>
-        safeOrder === "asc"
-          ? a.rating - b.rating
-          : b.rating - a.rating
-      );
+        simpleResult.sort((a, b) =>
+            safeOrder === "asc"
+            ? a.rating - b.rating
+            : b.rating - a.rating
+        );
     }
 
     // 5️⃣ response
     return res.status(200).json({
-      success: true,
-      data: simpleResult,
-      total: totalCount
+        success: true,
+        data: simpleResult,
+        total: totalCount
     });
 
-  } catch (error) {
-    console.error("Error in GET /books:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error. Please try again later."
-    });
-  }
+    } catch (error) {
+        console.error("Error in GET /books:", error);
+        return res.status(500).json({
+        success: false,
+        message: "Internal server error. Please try again later."
+        });
+    }
 });
+*/
+routerBooks.get("/", validateQuery, asyncHandler(async (req, res) => {
+    const { name, category, author, page = 1, limit = 25, sort, order } = req.query;
+    const safeOrderSQL = order === "asc" ? "ASC" : "DESC";
+    const safeOrderPrisma = order === "asc" ? "asc" : "desc";
+    const pageInt = parseInt(page, 10) || 1;
+    const limitInt = parseInt(limit, 10) || 25;
+    const offset = (pageInt - 1) * limitInt;
+
+    let data = [];
+    let total = 0;
+    // sort by rating
+    if (sort === "rating") {
+        data = await prisma.$queryRaw`
+            SELECT
+                b.book_id,
+                b.title,
+                b.description,
+                b.isbn,
+                b.publisher,
+                b.published_year,
+                b.cover_url,
+                b.created_at,
+                b.updated_at,
+
+                ARRAY_AGG(DISTINCT a.name ORDER BY a.name)
+                    FILTER (WHERE a.name IS NOT NULL) AS authors,
+
+                ARRAY_AGG(DISTINCT c.name ORDER BY c.name)
+                    FILTER (WHERE c.name IS NOT NULL) AS categories,
+
+                COALESCE(r.avg_rating, 0) AS rating
+
+            FROM books b
+
+            LEFT JOIN (
+                SELECT book_id, AVG(rating) AS avg_rating
+                FROM reviews
+                GROUP BY book_id
+            ) r ON r.book_id = b.book_id
+
+            LEFT JOIN book_authors ba ON ba.book_id = b.book_id
+            LEFT JOIN authors a ON a.author_id = ba.author_id
+
+            LEFT JOIN book_categories bc ON bc.book_id = b.book_id
+            LEFT JOIN categories c ON c.category_id = bc.category_id
+
+            WHERE
+                (${name} IS NULL OR b.title ILIKE '%' || ${name} || '%')
+                AND (${author} IS NULL OR EXISTS (
+                    SELECT 1
+                    FROM book_authors ba2
+                    JOIN authors a2 ON a2.author_id = ba2.author_id
+                    WHERE ba2.book_id = b.book_id
+                    AND a2.name ILIKE '%' || ${author} || '%'
+                ))
+                AND (${category} IS NULL OR EXISTS (
+                    SELECT 1
+                    FROM book_categories bc2
+                    JOIN categories c2 ON c2.category_id = bc2.category_id
+                    WHERE bc2.book_id = b.book_id
+                    AND c2.name ILIKE '%' || ${category} || '%'
+                ))
+
+            GROUP BY b.book_id, r.avg_rating
+
+            ORDER BY rating ${Prisma.raw(safeOrderSQL)}
+
+            LIMIT ${limitInt} OFFSET ${offset}
+        `;
+        const totalResult = await prisma.$queryRaw`
+            SELECT COUNT(*)::int as count
+            FROM books b
+            WHERE
+                (${name} IS NULL OR b.title ILIKE '%' || ${name} || '%')
+                AND (${author} IS NULL OR EXISTS (
+                    SELECT 1
+                    FROM book_authors ba2
+                    JOIN authors a2 ON a2.author_id = ba2.author_id
+                    WHERE ba2.book_id = b.book_id
+                    AND a2.name ILIKE '%' || ${author} || '%'
+                ))
+                AND (${category} IS NULL OR EXISTS (
+                    SELECT 1
+                    FROM book_categories bc2
+                    JOIN categories c2 ON c2.category_id = bc2.category_id
+                    WHERE bc2.book_id = b.book_id
+                    AND c2.name ILIKE '%' || ${category} || '%'
+                ));
+        `;
+        total = totalResult[0]?.count || 0;
+    } else {
+        // normal sort 
+        const allowedSortFields = [
+            "title",
+            "published_year",
+            "created_at"
+        ];
+        const safeSort = allowedSortFields.includes(sort) ? sort : "created_at";
+        const whereClause = {
+            ...(name && {
+                title: { contains: name, mode: "insensitive" }
+            }),
+            ...(author && {
+                book_authors: {
+                    some: {
+                        authors: {
+                            name: { contains: author, mode: "insensitive" }
+                        }
+                    }
+                }
+            }),
+            ...(category && {
+                book_categories: {
+                    some: {
+                        categories: {
+                            name: { contains: category, mode: "insensitive" }
+                        }
+                    }
+                }
+            })
+        }
+        const result = await prisma.books.findMany({
+            where: whereClause,
+            orderBy: {
+                [safeSort]: safeOrderPrisma
+            },
+            skip: offset,
+            take: limitInt,
+            include: {
+                book_authors: { include: { authors: true } },
+                book_categories: { include: { categories: true } },
+                reviews: { select: { rating: true } }
+            }
+        });
+        total = await prisma.books.count({
+            where: whereClause
+        });
+        data = result.map((b) => {
+            const avg = b.reviews.length > 0 ? b.reviews.reduce((s, r) => s + r.rating, 0) / b.reviews.length : 0;
+            return {
+                ...b,
+                avg_rating: avg
+            };
+        });
+    }
+    const finalData = data.map((b) => {
+        const authors =
+            b.authors ??
+            b.book_authors?.map((a) => a.authors.name) ??
+            [];
+
+        const categories =
+            b.categories ??
+            b.book_categories?.map((c) => c.categories.name) ??
+            [];
+
+        const rating =
+            b.rating ??
+            b.avg_rating ??
+            0;
+
+        return {
+            book_id: b.book_id,
+            title: b.title,
+            description: b.description,
+            isbn: b.isbn,
+            publisher: b.publisher,
+            published_year: b.published_year,
+            cover_url: b.cover_url,
+            created_at: b.created_at,
+            updated_at: b.updated_at,
+            author: authors,
+            category: categories,
+            rating: Number(rating)
+        };
+    });
+    return res.status(200).json({
+        success: true,
+        data: finalData,
+        total
+    })
+}));
+
 routerBooks.post("/", postBookValidation, async (req, res) => {
     //1 access req and body
     const { 
