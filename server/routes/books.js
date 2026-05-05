@@ -224,7 +224,9 @@ routerBooks.get("/", validateQuery, async (req, res) => {
 */
 routerBooks.get("/", validateQuery, asyncHandler(async (req, res) => {
     const { name, category, author, page = 1, limit = 25, sort, order } = req.query;
-    const safeOrderSQL = order === "asc" ? "ASC" : "DESC";
+    const nameParam = name || null;
+    const authorParam = author || null;
+    const categoryParam = category || null;
     const safeOrderPrisma = order === "asc" ? "asc" : "desc";
     const pageInt = parseInt(page, 10) || 1;
     const limitInt = parseInt(limit, 10) || 25;
@@ -234,10 +236,9 @@ routerBooks.get("/", validateQuery, asyncHandler(async (req, res) => {
     let total = 0;
     // sort by rating
     if (sort === "rating") {
-        const nameParam = name || null;
-        const authorParam = author || null;
-        const categoryParam = category || null;
-        data = await prisma.$queryRaw`
+        const orderSQL = order === "asc" ? "ASC" : "DESC";
+
+        const query = `
             SELECT
                 b.book_id,
                 b.title,
@@ -272,48 +273,63 @@ routerBooks.get("/", validateQuery, asyncHandler(async (req, res) => {
             LEFT JOIN categories c ON c.category_id = bc.category_id
 
             WHERE
-                (${nameParam} IS NULL OR b.title ILIKE '%' || ${nameParam} || '%')
-                AND (${authorParam} IS NULL OR EXISTS (
+                ($1::text IS NULL OR b.title ILIKE '%' || $1 || '%')
+                AND ($2::text IS NULL OR EXISTS (
                     SELECT 1
                     FROM book_authors ba2
                     JOIN authors a2 ON a2.author_id = ba2.author_id
                     WHERE ba2.book_id = b.book_id
-                    AND a2.name ILIKE '%' || ${authorParam} || '%'
+                    AND a2.name ILIKE '%' || $2 || '%'
                 ))
-                AND (${categoryParam} IS NULL OR EXISTS (
+                AND ($3::text IS NULL OR EXISTS (
                     SELECT 1
                     FROM book_categories bc2
                     JOIN categories c2 ON c2.category_id = bc2.category_id
                     WHERE bc2.book_id = b.book_id
-                    AND c2.name ILIKE '%' || ${categoryParam} || '%'
+                    AND c2.name ILIKE '%' || $3 || '%'
                 ))
 
-            GROUP BY b.book_id, r.avg_rating
+            GROUP BY b.book_id
+            ORDER BY rating ${orderSQL}
 
-            ORDER BY rating ${safeOrderSQL}
-
-            LIMIT ${limitInt} OFFSET ${offset}
+            LIMIT $4 OFFSET $5
         `;
-        const totalResult = await prisma.$queryRaw`
+
+        data = await prisma.$queryRawUnsafe(
+            query,
+            nameParam,
+            authorParam,
+            categoryParam,
+            limitInt,
+            offset
+        );
+        const totalQuery = `
             SELECT COUNT(*)::int as count
             FROM books b
             WHERE
-                (${nameParam} IS NULL OR b.title ILIKE '%' || ${nameParam} || '%')
-                AND (${authorParam} IS NULL OR EXISTS (
+                ($1::text IS NULL OR b.title ILIKE '%' || $1 || '%')
+                AND ($2::text IS NULL OR EXISTS (
                     SELECT 1
                     FROM book_authors ba2
                     JOIN authors a2 ON a2.author_id = ba2.author_id
                     WHERE ba2.book_id = b.book_id
-                    AND a2.name ILIKE '%' || ${authorParam} || '%'
+                    AND a2.name ILIKE '%' || $2 || '%'
                 ))
-                AND (${categoryParam} IS NULL OR EXISTS (
+                AND ($3::text IS NULL OR EXISTS (
                     SELECT 1
                     FROM book_categories bc2
                     JOIN categories c2 ON c2.category_id = bc2.category_id
                     WHERE bc2.book_id = b.book_id
-                    AND c2.name ILIKE '%' || ${categoryParam} || '%'
-                ));
+                    AND c2.name ILIKE '%' || $3 || '%'
+                ))
         `;
+
+        const totalResult = await prisma.$queryRawUnsafe(
+            totalQuery,
+            nameParam,
+            authorParam,
+            categoryParam
+        );
         total = totalResult[0]?.count || 0;
     } else {
         // normal sort 
