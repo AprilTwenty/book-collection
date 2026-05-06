@@ -12,12 +12,36 @@ import swaggerSetup from "./swagger.js";
 import cors from "cors";
 import dotenv from 'dotenv';
 import AppError from "./utils/AppError.js";
+import crypto from "node:crypto";
+import pinoHttp from "pino-http";
+import logger from "./utils/logger.js";
+
 
 dotenv.config();
 const app = express();
 const PORT = 4000;
 
 app.use(cors());
+
+app.use(
+    pinoHttp({
+        logger,
+
+        genReqId: (req) =>
+            req.headers["x-request-id"] || crypto.randomUUID(),
+
+        customLogLevel: (res, err) => {
+            if (res.statusCode >= 500) return "error";
+            if (res.statusCode >= 400) return "warn";
+            return "info";
+        },
+
+        customProps: (req) => ({
+            url: req.originalUrl,
+            method: req.method
+        })
+    })
+);
 
 app.use(express.json());
 app.use("/books", routerBooks);
@@ -43,6 +67,8 @@ app.get('/', (req, res) => {
 });
 
 app.use((req, res) => {
+    req.log.warn({ url: req.originalUrl }, "Route not found");
+
     res.status(404).json({
         success: false,
         message: "Route not found"
@@ -50,25 +76,27 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
-    console.error("🔥 ERROR:", {
-        "message": err.message,
-        "code": err.code,        
-        "meta": err.meta,        
-        "stack": err.stack
+    (req.log || logger).error({
+        msg: err.message,
+        stack: err.stack,
+        code: err.code,
+        meta: err.meta,
+        url: req.originalUrl,
+        statusCode: err.statusCode
     });
+
     if (err.name === "JsonWebTokenError") {
         err = new AppError("Invalid token", 401);
     }
     if (err.name === "TokenExpiredError") {
         err = new AppError("Expired token", 401);
     }
+
     const status = err.statusCode || 500;
 
     res.status(status).json({
         success: false,
-        message: status === 500
-        ? "Internal server error"
-        : err.message
+        message: status === 500 ? "Internal server error" : err.message
     });
 });
 
