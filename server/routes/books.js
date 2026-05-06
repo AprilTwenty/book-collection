@@ -256,7 +256,7 @@ routerBooks.get("/", validateQuery, asyncHandler(async (req, res) => {
                 ARRAY_AGG(DISTINCT c.name ORDER BY c.name)
                     FILTER (WHERE c.name IS NOT NULL) AS categories,
 
-                COALESCE(r.avg_rating, 0) AS rating
+                MAX(COALESCE(r.avg_rating, 0)) AS rating
 
             FROM books b
 

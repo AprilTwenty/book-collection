@@ -52,6 +52,8 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
     console.error("🔥 ERROR:", {
         "message": err.message,
+        "code": err.code,        
+        "meta": err.meta,        
         "stack": err.stack
     });
     if (err.name === "JsonWebTokenError") {
@@ -70,11 +72,9 @@ app.use((err, req, res, next) => {
     });
 });
 
-/* ปิดเพื่อ deploy ขึ้น vercel ไม่สามารถใช้ listen ได้
 app.listen(PORT, () => {
     console.log("server is running on port " + PORT);
 });
-*/
 
 
 export default app;
