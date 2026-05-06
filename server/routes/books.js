@@ -222,6 +222,7 @@ routerBooks.get("/", validateQuery, async (req, res) => {
     }
 });
 */
+/*
 routerBooks.get("/", validateQuery, asyncHandler(async (req, res) => {
     const { name, category, author, page = 1, limit = 25, sort, order } = req.query;
     const nameParam = name || null;
@@ -423,6 +424,145 @@ routerBooks.get("/", validateQuery, asyncHandler(async (req, res) => {
         total
     })
 }));
+*/
+
+routerBooks.get(
+    "/",
+    validateQuery,
+    asyncHandler(async (req, res) => {
+
+        const {
+            name,
+            category,
+            author,
+            page = 1,
+            limit = 25,
+            sort = "created_at",
+            order = "desc"
+        } = req.query;
+
+        const safeOrder = order === "asc" ? "asc" : "desc";
+
+        const allowedSortFields = [
+            "title",
+            "published_year",
+            "created_at",
+            "rating_sum",
+            "rating_count"
+        ];
+
+        const safeSort = allowedSortFields.includes(sort)
+            ? sort
+            : "created_at";
+
+        const pageInt = parseInt(page, 10) || 1;
+        const limitInt = parseInt(limit, 10) || 25;
+
+        const whereClause = {
+            ...(name && {
+                title: {
+                    contains: name,
+                    mode: "insensitive"
+                }
+            }),
+
+            ...(author && {
+                book_authors: {
+                    some: {
+                        authors: {
+                            name: {
+                                contains: author,
+                                mode: "insensitive"
+                            }
+                        }
+                    }
+                }
+            }),
+
+            ...(category && {
+                book_categories: {
+                    some: {
+                        categories: {
+                            name: {
+                                contains: category,
+                                mode: "insensitive"
+                            }
+                        }
+                    }
+                }
+            })
+        };
+
+        const [books, total] = await Promise.all([
+
+            prisma.books.findMany({
+                where: whereClause,
+
+                orderBy: {
+                    [safeSort]: safeOrder
+                },
+
+                skip: (pageInt - 1) * limitInt,
+                take: limitInt,
+
+                include: {
+                    book_authors: {
+                        include: {
+                            authors: true
+                        }
+                    },
+
+                    book_categories: {
+                        include: {
+                            categories: true
+                        }
+                    }
+                }
+            }),
+
+            prisma.books.count({
+                where: whereClause
+            })
+        ]);
+
+        const finalData = books.map((b) => {
+
+            const rating =
+                b.rating_count > 0
+                    ? b.rating_sum / b.rating_count
+                    : 0;
+
+            return {
+                book_id: b.book_id,
+                title: b.title,
+                description: b.description,
+                isbn: b.isbn,
+                publisher: b.publisher,
+                published_year: b.published_year,
+                cover_url: b.cover_url,
+                created_at: b.created_at,
+                updated_at: b.updated_at,
+
+                author: b.book_authors.map(
+                    (a) => a.authors.name
+                ),
+
+                category: b.book_categories.map(
+                    (c) => c.categories.name
+                ),
+
+                rating: Number(rating.toFixed(1)),
+                rating_count: b.rating_count
+            };
+        });
+
+        return res.status(200).json({
+            success: true,
+            data: finalData,
+            total
+        });
+    })
+);
 
 routerBooks.post("/", postBookValidation, async (req, res) => {
     //1 access req and body
