@@ -2,13 +2,10 @@ import { Router } from "express";
 import prisma from "../prisma/client.js";
 import { reviewValidation, validateId, validateQuery, reviewUpdateValidation } from "../middleware/validateData.js"
 import { protect } from "../middleware/protect.js"
+import asyncHandler from "../utils/asyncHandler.js";
 
 const routerReviews = Router();
 //routerReviews.use(protect);
-routerReviews.use((req, res, next) => {
-    console.log("🔥 reviews router reached");
-    next();
-});
 
 const reviewInclude = {
   users:{
@@ -23,7 +20,7 @@ const reviewInclude = {
     }
   }
 };
-
+/*
 routerReviews.post("/", protect, reviewValidation, async (req, res) => {
     //1 access request
     const { book_id, rating, comment } = req.body;
@@ -32,15 +29,6 @@ routerReviews.post("/", protect, reviewValidation, async (req, res) => {
     const ratingInt = parseInt(rating, 10)
     try {
         //2 sql
-        /*
-        const user = await prisma.users.findUnique({ where: { user_id: userIdInt } });
-        if (!user) {
-            return res.status(404).json({
-                "success": false,
-                "message": "User not found"
-            });
-        }
-        */
         const book = await prisma.books.findUnique({ where: { book_id: bookIdInt }});
         if (!book) {
             return res.status(404).json({
@@ -70,7 +58,7 @@ routerReviews.post("/", protect, reviewValidation, async (req, res) => {
             data: createReview, 
             include: reviewInclude
     });
-        /*
+        -------------------------------
         const avg = await prisma.reviews.aggregate({
             where:{ book_id: bookIdInt },
             _avg:{ rating:true }
@@ -80,7 +68,7 @@ routerReviews.post("/", protect, reviewValidation, async (req, res) => {
             where:{ book_id: bookIdInt },
             data:{ average_rating: avg._avg.rating ?? 0}
         });
-        */
+        -------------------
 
         //3 response
         return res.status(201).json({
@@ -95,6 +83,71 @@ routerReviews.post("/", protect, reviewValidation, async (req, res) => {
         });
     }
 });
+*/
+
+routerReviews.post("/", protect, reviewValidation, asyncHandler(async (req, res) => {
+    const { book_id, rating, comment } = req.body;
+    const userIdInt = parseInt(req.user.user_id, 10);
+    const bookIdInt = parseInt(book_id,10);
+    const ratingInt = parseInt(rating, 10)
+
+    const reviewData = {
+        book_id: bookIdInt,
+        user_id: userIdInt,
+        rating: ratingInt,
+        comment
+    };
+
+    const createdReview = await prisma.$transaction(async (tx) => {
+        const currentBook = await tx.books.findUnique({
+            where : {
+                book_id : bookIdInt
+            },
+            select: {
+                book_id: true,
+                rating_count: true,
+                rating_sum: true
+            }
+        });
+        if (!currentBook) {
+            throw new AppError(`Book not found`, 404);
+        }
+        const existingReview = await tx.reviews.findFirst({
+            where : {
+                book_id: bookIdInt,
+                user_id: userIdInt
+            }
+        });
+        if (existingReview) {
+            throw new AppError(`Review already exists`, 409);
+        }
+        const newReview = await tx.reviews.create({
+            data: reviewData,
+            include: reviewInclude
+        });
+        const newRatingCount = currentBook.rating_count + 1;
+        const newRatingSum = currentBook.rating_sum + ratingInt;
+        const newAvgRating = newRatingSum / newRatingCount;
+        await tx.books.update({
+            where: {
+                book_id: bookIdInt
+            },
+                data: {
+                    rating_count: newRatingCount,
+                    rating_sum: newRatingSum,
+                    rating_avg: newAvgRating
+                }
+        });
+        return newReview;
+    });
+    return res.status(201).json({
+        success: true,
+        message: "Review created successfully",
+        data: createdReview
+    });
+}));
+
+
 routerReviews.get("/:reviewId", validateId("reviewId"), async (req, res) => {
     //1 access request
     //2 sql
