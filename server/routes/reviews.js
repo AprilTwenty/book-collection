@@ -3,6 +3,7 @@ import prisma from "../prisma/client.js";
 import { reviewValidation, validateId, validateQuery, reviewUpdateValidation } from "../middleware/validateData.js"
 import { protect } from "../middleware/protect.js"
 import asyncHandler from "../utils/asyncHandler.js";
+import AppError from "../utils/AppError.js";
 
 const routerReviews = Router();
 //routerReviews.use(protect);
@@ -147,7 +148,7 @@ routerReviews.post("/", protect, reviewValidation, asyncHandler(async (req, res)
     });
 }));
 
-
+/*
 routerReviews.get("/:reviewId", validateId("reviewId"), async (req, res) => {
     //1 access request
     //2 sql
@@ -178,6 +179,23 @@ routerReviews.get("/:reviewId", validateId("reviewId"), async (req, res) => {
         });
     }
 });
+*/
+
+routerReviews.get("/:reviewId", validateId("reviewId"), asyncHandler(async (req, res) => {
+    const reviewIdInt = parseInt(req.params.reviewId, 10);
+    const reviewData = await prisma.reviews.findUnique({
+        where: { review_id: reviewIdInt },
+        include: reviewInclude
+    });
+    if (!reviewData) {
+        throw new AppError(`Review not found`, 404);
+    }
+    return res.status(200).json({
+        success: true,
+        data: reviewData
+    });
+}));
+
 routerReviews.get("/", validateQuery, async (req, res) => {
     //1 access requset
     const { user_id, book_id, page, limit } = req.query;
@@ -224,6 +242,7 @@ routerReviews.get("/", validateQuery, async (req, res) => {
         });
     }
 });
+
 routerReviews.put(
   "/:reviewId",
   protect,
