@@ -281,6 +281,7 @@ routerReviews.get("/", validateQuery, asyncHandler( async(req, res) => {
     });
 }));
 
+/*
 routerReviews.put(
   "/:reviewId",
   protect,
@@ -333,6 +334,60 @@ routerReviews.put(
       });
     }
 });
+*/
+
+routerReviews.put("/:reviewId", protect, validateId("reviewId"), reviewUpdateValidation, asyncHandler(async (req, res) => {
+    const reviewIdInt = parseInt(req.params.reviewId, 10);
+    const userIdInt = parseInt(req.user.user_id, 10);
+    const { rating, comment } = req.body;
+
+    const updatedReview = await prisma.$transaction(async (tx) => {
+        const currentReview = await tx.reviews.findUnique({ where: { review_id: reviewIdInt } });
+        if (!currentReview) {
+            throw new AppError(`Review not found`, 404);
+        }
+        if (currentReview.user_id !== userIdInt) {
+            throw new AppError(`Forbidden` ,403);
+        }
+        const updatedReview = await tx.reviews.update({
+            where: { review_id: reviewIdInt },
+            data: {
+                ...(rating !== undefined && { rating }),
+                ...(comment !== undefined && { comment })
+            },
+            include: reviewInclude
+        });
+        if (rating !== undefined) {
+            const currentBook = await tx.books.findUnique({
+                where: { book_id: currentReview.book_id },
+                select: {
+                    rating_sum: true,
+                    rating_count: true
+                }
+            });
+            if (!currentBook) {
+                throw new AppError(`Book not found`, 404);
+            }
+            const ratingDiff  = rating - currentReview.rating;
+            const newRatingSum = currentBook.rating_sum + ratingDiff;
+            const newAvgRating = newRatingSum / currentBook.rating_count;
+
+            await tx.books.update({
+            where: { book_id: currentReview.book_id },
+                data: {
+                    rating_sum: newRatingSum,
+                    rating_avg: newAvgRating
+                }
+            });
+        }
+        return updatedReview;
+    });
+    return res.status(200).json({
+        success: true,
+        message: "Update review successfully",
+        data: updatedReview
+    });
+}));
 
 routerReviews.delete("/:reviewId", protect, validateId("reviewId"), async (req, res) => {
     //1 access requset
