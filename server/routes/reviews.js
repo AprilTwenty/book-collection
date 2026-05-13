@@ -196,6 +196,7 @@ routerReviews.get("/:reviewId", validateId("reviewId"), asyncHandler(async (req,
     });
 }));
 
+/*
 routerReviews.get("/", validateQuery, async (req, res) => {
     //1 access requset
     const { user_id, book_id, page, limit } = req.query;
@@ -242,6 +243,43 @@ routerReviews.get("/", validateQuery, async (req, res) => {
         });
     }
 });
+*/
+
+routerReviews.get("/", validateQuery, asyncHandler( async(req, res) => {
+    const { user_id, book_id, page, limit } = req.query;
+    const userIdInt = parseInt(user_id, 10);
+    const bookIdInt = parseInt(book_id, 10);
+
+    let filters = {};
+    if (user_id) {
+        filters.user_id = userIdInt;
+    }
+    if (book_id) {
+        filters.book_id = bookIdInt;
+    }
+
+    let queryOptions = { 
+        where: filters,
+    };
+    if (page !== undefined && limit !== undefined) {
+        const pageInt = parseInt(page, 10);
+        const limitInt = parseInt(limit, 10);
+        queryOptions.skip = (pageInt - 1) * limitInt;
+        queryOptions.take = limitInt;
+    }
+
+    const reviewData = await prisma.reviews.findMany({
+        ...queryOptions,
+        include: reviewInclude
+    });
+    const reviewCount = await prisma.reviews.count({ where: filters });
+
+    return res.status(200).json({
+        success: true,
+        count: reviewCount,
+        data: reviewData
+    });
+}));
 
 routerReviews.put(
   "/:reviewId",
@@ -295,6 +333,7 @@ routerReviews.put(
       });
     }
 });
+
 routerReviews.delete("/:reviewId", protect, validateId("reviewId"), async (req, res) => {
     //1 access requset
     const reviewIdInt = parseInt(req.params.reviewId, 10);
