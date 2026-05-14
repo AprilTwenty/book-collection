@@ -347,7 +347,7 @@ routerReviews.put("/:reviewId", protect, validateId("reviewId"), reviewUpdateVal
             throw new AppError(`Review not found`, 404);
         }
         if (currentReview.user_id !== userIdInt) {
-            throw new AppError(`Forbidden` ,403);
+            throw new AppError(`Forbidden`, 403);
         }
         const updatedReview = await tx.reviews.update({
             where: { review_id: reviewIdInt },
@@ -374,10 +374,10 @@ routerReviews.put("/:reviewId", protect, validateId("reviewId"), reviewUpdateVal
 
             await tx.books.update({
             where: { book_id: currentReview.book_id },
-                data: {
-                    rating_sum: newRatingSum,
-                    rating_avg: newAvgRating
-                }
+            data: {
+                rating_sum: newRatingSum,
+                rating_avg: newAvgRating
+            }
             });
         }
         return updatedReview;
@@ -389,6 +389,7 @@ routerReviews.put("/:reviewId", protect, validateId("reviewId"), reviewUpdateVal
     });
 }));
 
+/*
 routerReviews.delete("/:reviewId", protect, validateId("reviewId"), async (req, res) => {
     //1 access requset
     const reviewIdInt = parseInt(req.params.reviewId, 10);
@@ -420,7 +421,7 @@ routerReviews.delete("/:reviewId", protect, validateId("reviewId"), async (req, 
             where:{ book_id: deleteTarget.book_id },
             data:{ average_rating: avg._avg.rating ?? 0 }
         });
-        */
+        */ /*
         //3 response
         return res.status(200).json({
             "success": true,
@@ -435,4 +436,66 @@ routerReviews.delete("/:reviewId", protect, validateId("reviewId"), async (req, 
         });
     }
 });
+*/
+
+routerReviews.delete("/:reviewId",protect, validateId("reviewId"), asyncHandler (async (req, res) => {
+    const reviewIdInt = parseInt(req.params.reviewId, 10);
+    const userIdInt = parseInt(req.user.user_id, 10);
+
+    const reviewWhere = {
+        where: { review_id: reviewIdInt }
+    }
+    
+    const deletedReview = await prisma.$transaction(async (tx) => {
+        const currentReview = await tx.reviews.findUnique({
+            ...reviewWhere,
+            select: {
+                review_id: true,
+                user_id: true,
+                book_id: true,
+                rating: true
+            }
+        });
+        if (!currentReview) {
+            throw new AppError(`Review not found`, 404);
+        }
+        if (currentReview.user_id !== userIdInt) {
+            throw new AppError(`Forbidden`, 403);
+        }
+        
+        const deletedReview = await tx.reviews.delete(reviewWhere);
+
+        const bookWhere = {where: { book_id: currentReview.book_id }};
+
+        const currentBook = await tx.books.findUnique({
+            ...bookWhere,
+            select: {
+                rating_sum: true,
+                rating_count: true
+            }
+        });
+        if (!currentBook) {
+            throw new AppError(`Book not found`, 404);
+        }
+        const newRatingSum = currentBook.rating_sum - currentReview.rating;
+        const newRatingCount = currentBook.rating_count - 1;
+        const newAvgRating = newRatingCount > 0 ? newRatingSum / newRatingCount : 0;
+
+        await tx.books.update({
+            ...bookWhere,
+            data: {
+                rating_count: newRatingCount,
+                rating_sum: newRatingSum,
+                rating_avg: newAvgRating
+            }
+        });
+        return deletedReview;
+    });
+    return res.status(200).json({
+        "success": true,
+        "message": "Delete review successfully",
+        "data": deletedReview
+    });
+}));
+
 export default routerReviews;
