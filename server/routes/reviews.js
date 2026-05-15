@@ -21,70 +21,6 @@ const reviewInclude = {
     }
   }
 };
-/*
-routerReviews.post("/", protect, reviewValidation, async (req, res) => {
-    //1 access request
-    const { book_id, rating, comment } = req.body;
-    const userIdInt = parseInt(req.user.user_id, 10);
-    const bookIdInt = parseInt(book_id,10);
-    const ratingInt = parseInt(rating, 10)
-    try {
-        //2 sql
-        const book = await prisma.books.findUnique({ where: { book_id: bookIdInt }});
-        if (!book) {
-            return res.status(404).json({
-                "success": false,
-                "message": "Book not found"
-            });
-        }
-        const existing = await prisma.reviews.findFirst({
-            where:{
-                book_id: bookIdInt,
-                user_id: userIdInt
-            }
-        });
-        if (existing){
-            return res.status(409).json({
-                success:false,
-                message:"You already reviewed this book"
-            });
-        }
-        const createReview = {
-            book_id: bookIdInt,
-            user_id: userIdInt,
-            rating: ratingInt,
-            comment
-        };
-        const result = await prisma.reviews.create({
-            data: createReview, 
-            include: reviewInclude
-    });
-        -------------------------------
-        const avg = await prisma.reviews.aggregate({
-            where:{ book_id: bookIdInt },
-            _avg:{ rating:true }
-        });
-
-        await prisma.books.update({
-            where:{ book_id: bookIdInt },
-            data:{ average_rating: avg._avg.rating ?? 0}
-        });
-        -------------------
-
-        //3 response
-        return res.status(201).json({
-            "success": true,
-            "message": "Create review successfully",
-            "data": result
-        });
-    } catch (error) {
-        return res.status(500).json({
-            "success": false,
-            "message": "Internal server error. Please try again later"
-        });
-    }
-});
-*/
 
 routerReviews.post("/", protect, reviewValidation, asyncHandler(async (req, res) => {
     const { book_id, rating, comment } = req.body;
@@ -113,10 +49,12 @@ routerReviews.post("/", protect, reviewValidation, asyncHandler(async (req, res)
         if (!currentBook) {
             throw new AppError(`Book not found`, 404);
         }
-        const existingReview = await tx.reviews.findFirst({
+        const existingReview = await tx.reviews.findUnique({
             where : {
-                book_id: bookIdInt,
-                user_id: userIdInt
+                book_id_user_id: {
+                    book_id: bookIdInt,
+                    user_id: userIdInt
+                }
             }
         });
         if (existingReview) {
@@ -148,39 +86,6 @@ routerReviews.post("/", protect, reviewValidation, asyncHandler(async (req, res)
     });
 }));
 
-/*
-routerReviews.get("/:reviewId", validateId("reviewId"), async (req, res) => {
-    //1 access request
-    //2 sql
-    const reviewIdInt = parseInt(req.params.reviewId, 10);
-    const findId = {
-        where: { review_id: reviewIdInt },
-    };
-    try {
-            const result = await prisma.reviews.findUnique({
-            ...findId,
-            include: reviewInclude
-            });
-        //3 response
-        if (!result) {
-            return res.status(404).json({
-                "success": false,
-                "message": "Review not found"
-            })
-        }
-        return res.status(200).json({
-            "success": true,
-            "data": result
-        });
-    } catch (error) {
-        return res.status(500).json({
-            "success": false,
-            "message": "Internal server error. Please try again later"
-        });
-    }
-});
-*/
-
 routerReviews.get("/:reviewId", validateId("reviewId"), asyncHandler(async (req, res) => {
     const reviewIdInt = parseInt(req.params.reviewId, 10);
     const reviewData = await prisma.reviews.findUnique({
@@ -196,55 +101,6 @@ routerReviews.get("/:reviewId", validateId("reviewId"), asyncHandler(async (req,
     });
 }));
 
-/*
-routerReviews.get("/", validateQuery, async (req, res) => {
-    //1 access requset
-    const { user_id, book_id, page, limit } = req.query;
-    //2 sql
-    let searchCondition = {};
-
-    if (user_id) {
-    searchCondition.user_id = parseInt(user_id);
-    }
-    if (book_id) {
-    searchCondition.book_id = parseInt(book_id);
-    }
-    let queryOption = { 
-        where: searchCondition,
-    };
-    if (page !== undefined && limit !== undefined) {
-        const pageInt = parseInt(page, 10);
-        const limitInt = parseInt(limit, 10);
-        queryOption.skip = (pageInt - 1) * limitInt;
-        queryOption.take = limitInt;
-    }
-    console.log("query:", req.query);
-    try {
-        //const result = await prisma.reviews.findMany(queryOption);
-        
-
-        const result = await prisma.reviews.findMany({
-            ...queryOption,
-            include: reviewInclude
-    });
-        const count = await prisma.reviews.count({ where: searchCondition });
-        //3 response
-        return res.status(200).json({
-            "success": true,
-            "count": count,
-            "data": result
-        });
-    } catch (error) {
-        console.error("GET /reviews error:", error);
-
-        return res.status(500).json({
-            "success": false,
-            "message": "Internal server error. Please try again"
-        });
-    }
-});
-*/
-
 routerReviews.get("/", validateQuery, asyncHandler( async(req, res) => {
     const { user_id, book_id, page, limit } = req.query;
     const userIdInt = parseInt(user_id, 10);
@@ -258,7 +114,7 @@ routerReviews.get("/", validateQuery, asyncHandler( async(req, res) => {
         filters.book_id = bookIdInt;
     }
 
-    let queryOptions = { 
+    const queryOptions = { 
         where: filters,
     };
     if (page !== undefined && limit !== undefined) {
@@ -270,7 +126,10 @@ routerReviews.get("/", validateQuery, asyncHandler( async(req, res) => {
 
     const reviewData = await prisma.reviews.findMany({
         ...queryOptions,
-        include: reviewInclude
+        include: reviewInclude,
+        orderBy: {
+            created_at: "desc"
+        }
     });
     const reviewCount = await prisma.reviews.count({ where: filters });
 
@@ -281,68 +140,22 @@ routerReviews.get("/", validateQuery, asyncHandler( async(req, res) => {
     });
 }));
 
-/*
-routerReviews.put(
-  "/:reviewId",
-  protect,
-  validateId("reviewId"),
-  reviewUpdateValidation,
-  async (req, res) => {
-
-    const { rating, comment } = req.body;
-    const reviewIdInt = parseInt(req.params.reviewId, 10);
-
-    try {
-      const checkReview = await prisma.reviews.findUnique({
-        where: { review_id: reviewIdInt }
-      });
-
-      if (!checkReview) {
-        return res.status(404).json({
-          success:false,
-          message:"Review not found"
-        });
-      }
-
-      if (checkReview.user_id !== req.user.user_id) {
-        return res.status(403).json({
-          success:false,
-          message:"Forbidden"
-        });
-      }
-
-        const result = await prisma.reviews.update({
-            where: { review_id: reviewIdInt },
-            data: {
-            ...(rating !== undefined && { rating }),
-            ...(comment !== undefined && { comment })
-            },
-            include: reviewInclude
-        });
-
-      return res.status(200).json({
-        success:true,
-        message:"Update review successfully",
-        data: result
-      });
-
-    } catch (error) {
-      console.error("PUT /reviews error:", error);
-      return res.status(500).json({
-        success:false,
-        message:"Internal server error"
-      });
-    }
-});
-*/
-
 routerReviews.put("/:reviewId", protect, validateId("reviewId"), reviewUpdateValidation, asyncHandler(async (req, res) => {
     const reviewIdInt = parseInt(req.params.reviewId, 10);
     const userIdInt = parseInt(req.user.user_id, 10);
     const { rating, comment } = req.body;
 
     const updatedReview = await prisma.$transaction(async (tx) => {
-        const currentReview = await tx.reviews.findUnique({ where: { review_id: reviewIdInt } });
+        const currentReview = await tx.reviews.findUnique({
+            where: {
+                review_id: reviewIdInt
+            },
+            select: {
+                user_id: true,
+                rating: true,
+                book_id: true
+            }
+        });
         if (!currentReview) {
             throw new AppError(`Review not found`, 404);
         }
@@ -357,7 +170,7 @@ routerReviews.put("/:reviewId", protect, validateId("reviewId"), reviewUpdateVal
             },
             include: reviewInclude
         });
-        if (rating !== undefined) {
+        if (rating !== undefined && rating !== currentReview.rating) {
             const currentBook = await tx.books.findUnique({
                 where: { book_id: currentReview.book_id },
                 select: {
@@ -389,55 +202,6 @@ routerReviews.put("/:reviewId", protect, validateId("reviewId"), reviewUpdateVal
     });
 }));
 
-/*
-routerReviews.delete("/:reviewId", protect, validateId("reviewId"), async (req, res) => {
-    //1 access requset
-    const reviewIdInt = parseInt(req.params.reviewId, 10);
-    //2 sql
-    const deleteReview = {
-        where: { review_id: reviewIdInt }
-    }
-    try {
-        const deleteTarget = await prisma.reviews.findUnique(deleteReview);
-        if (!deleteTarget) {
-            return res.status(404).json({
-                "success": false,
-                "message": "Review not found"
-            });
-        }
-        if (deleteTarget.user_id !== req.user.user_id) {
-            return res.status(403).json({
-            success:false,
-            message:"Forbidden"
-        });
-    }
-        const result = await prisma.reviews.delete(deleteReview);
-        /*
-        const avg = await prisma.reviews.aggregate({
-            where:{ book_id: deleteTarget.book_id },
-            _avg:{ rating:true }
-        });
-        await prisma.books.update({
-            where:{ book_id: deleteTarget.book_id },
-            data:{ average_rating: avg._avg.rating ?? 0 }
-        });
-        */ /*
-        //3 response
-        return res.status(200).json({
-            "success": true,
-            "message": "Delete review successfully",
-            "data": result
-        });
-    } catch (error) {
-            console.error(error)
-        return res.status(500).json({
-            "success": false,
-            "message": "Internal server error. Please try again later"
-        });
-    }
-});
-*/
-
 routerReviews.delete("/:reviewId",protect, validateId("reviewId"), asyncHandler (async (req, res) => {
     const reviewIdInt = parseInt(req.params.reviewId, 10);
     const userIdInt = parseInt(req.user.user_id, 10);
@@ -450,7 +214,6 @@ routerReviews.delete("/:reviewId",protect, validateId("reviewId"), asyncHandler 
         const currentReview = await tx.reviews.findUnique({
             ...reviewWhere,
             select: {
-                review_id: true,
                 user_id: true,
                 book_id: true,
                 rating: true
@@ -492,9 +255,9 @@ routerReviews.delete("/:reviewId",protect, validateId("reviewId"), asyncHandler 
         return deletedReview;
     });
     return res.status(200).json({
-        "success": true,
-        "message": "Delete review successfully",
-        "data": deletedReview
+        success: true,
+        message: "Delete review successfully",
+        data: deletedReview
     });
 }));
 
