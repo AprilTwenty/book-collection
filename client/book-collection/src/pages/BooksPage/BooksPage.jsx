@@ -9,12 +9,16 @@ function BooksPage() {
   const [books, setBooks] = useState([]);
 
   const name = searchParams.get("name");
+  const category = searchParams.get("category");
+  const author = searchParams.get("author");
 
 useEffect(() => {
   async function fetchBooks() {
     try {
       const response = await getBooks({
         name: name || "",
+        category: category || "",
+        author: author || "",
       });
       setBooks(response.data.data);
     } catch (error) {
@@ -23,7 +27,7 @@ useEffect(() => {
   }
 
   fetchBooks();
-}, [name]);
+}, [name, category, author]);
 
   return (
     <div className="books-container">

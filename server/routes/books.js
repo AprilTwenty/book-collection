@@ -550,6 +550,30 @@ routerBooks.get("/", validateQuery, asyncHandler(async (req, res) => {
 })
 );
 
+/*
+routerBooks.get("/", validateQuery, asyncHandler( async (req, res) => {
+    const { name, author, category, page = 1, limit = 25, sort = "created_at", order = "desc" } = req.query;
+    const safeOrder = order === "asc" ? "asc" : "desc";
+    const allowedSortFields = [
+        "title",
+        "published_year",
+        "created_at",
+        "rating_sum",
+        "rating_count",
+        "rating_avg"
+    ];
+    const safeSort = allowedSortFields.includes(sort) ? sort : "created_at";
+    const pageInt = parseInt(page, 10) || 1;
+    const limitInt = parseInt(limit, 10) || 25;
+    const whereClause = {
+
+    }
+
+
+}))
+    */
+
+
 routerBooks.post("/", postBookValidation, async (req, res) => {
     //1 access req and body
     const { 
