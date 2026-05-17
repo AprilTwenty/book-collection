@@ -2,6 +2,7 @@ import { Router } from "express";
 import { postBookValidation, validateQuery } from "../middleware/validateData.js";
 import prisma from "../prisma/client.js";
 import asyncHandler from "../utils/asyncHandler.js";
+import { create } from "node:domain";
 
 const routerBooks = Router();
 
@@ -550,7 +551,7 @@ routerBooks.get("/", validateQuery, asyncHandler(async (req, res) => {
 })
 );
 
-/*
+
 routerBooks.get("/", validateQuery, asyncHandler( async (req, res) => {
     const { name, author, category, page = 1, limit = 25, sort = "created_at", order = "desc" } = req.query;
     const safeOrder = order === "asc" ? "asc" : "desc";
@@ -566,12 +567,95 @@ routerBooks.get("/", validateQuery, asyncHandler( async (req, res) => {
     const pageInt = parseInt(page, 10) || 1;
     const limitInt = parseInt(limit, 10) || 25;
     const whereClause = {
-
+        ...(name && {
+            title: {
+                contains: name,
+                mode: "insensitive"
+            }
+        }),
+        ...(category && {
+            book_categories: {
+                some: {
+                    categories: {
+                        name: {
+                            contains: category,
+                            mode: "insensitive"
+                        }
+                    }
+                }
+            }
+        }),
+        ...(author && {
+            book_authors: {
+                some: {
+                    authors: {
+                        name: {
+                            contains: author,
+                            mode: "insensitive"
+                        }
+                    }
+                }
+            }
+        })
     }
+    const [ books, total ] = await Promise.all([
+        prisma.books.findMany({
+            where: whereClause,
+            orderBy: {
+                [safeSort]: safeOrder
+            },
+            skip: (pageInt - 1 ) * limitInt,
+            take: limitInt,
 
-
+            include: {
+                book_categories: {
+                    include: {
+                        categories: {
+                            select: {
+                                name: true
+                            }
+                        }
+                    }
+                },
+                book_authors: {
+                    include: {
+                        authors: {
+                            select: {
+                                name: true
+                            }
+                        }
+                    }
+                }
+            }
+        }),
+        prisma.books.count({
+        where: whereClause
+        })
+    ])
+    const finalData = books.map((book) => {
+        return {
+            book_id: book.book_id,
+            title: book.title,
+            description: book.description,
+            isbn: book.isbn,
+            publisher: book.publisher,
+            published_year: book.published_year,
+            cover_url: book.cover_url,
+            created_at: book.created_at,
+            updated_at: book.updated_at,
+            category:  book.book_categories.map((category) => category.categories.name),
+            author: book.book_authors.map((author) => author.authors.name),
+            rating: book.rating_avg,
+            rating_count: book.rating_count
+        }
+    })
+    return res.status(200).json({
+        success: true,
+        data: finalData,
+        total
+    })
 }))
-    */
+    
 
 
 routerBooks.post("/", postBookValidation, async (req, res) => {
