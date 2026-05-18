@@ -1,8 +1,9 @@
 import { Router } from "express";
-import { postBookValidation, validateQuery } from "../middleware/validateData.js";
+import { postBookValidation, validateId, validateQuery } from "../middleware/validateData.js";
 import prisma from "../prisma/client.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import { create } from "node:domain";
+import AppError from "../utils/AppError.js";
 
 const routerBooks = Router();
 
@@ -63,6 +64,7 @@ routerBooks.get("/latest", asyncHandler( async (req, res) => {
     });
 }));
 
+/*
 routerBooks.get("/:bookId", async (req, res) => {
     //1 access body and req
     const bookIdFromClient = req.params.bookId;
@@ -123,6 +125,60 @@ routerBooks.get("/:bookId", async (req, res) => {
         });
     }
 });
+*/
+
+routerBooks.get("/:bookId", validateId("bookId"), asyncHandler( async (req, res) => {
+    const bookIdInt = parseInt(req.params.bookId, 10);
+
+    const book = await prisma.books.findUnique({
+        where: {
+            book_id: bookIdInt
+        },
+        include: {
+            book_categories: {
+                include: {
+                    categories: {
+                        select: {
+                            name: true
+                        }
+                    }
+                }
+            },
+            book_authors: {
+                include: {
+                    authors: {
+                        select: {
+                            name: true
+                        }
+                    }
+                }
+            }
+        }
+    });
+    if (!book) {
+        throw new AppError(`Book not found`, 404);
+    }
+    const simpleResult = {
+        book_id: book.book_id,
+        title: book.title,
+        description: book.description,
+        isbn: book.isbn,
+        publisher: book.publisher,
+        published_year: book.published_year,
+        total_reviews: book.rating_count,
+        average_rating: book.rating_avg,
+        cover_url: book.cover_url,
+        created_at: book.created_at,
+        updated_at: book.updated_at,
+        category: book.book_categories.map((arr_category) => arr_category.categories.name),
+        author: book.book_authors.map((arr_author) => arr_author.authors.name)
+    }
+    return res.status(200).json({
+        success: true,
+        data: simpleResult
+    })
+}))
+
 /*
 routerBooks.get("/", validateQuery, async (req, res) => {
     // 1️⃣ access req
