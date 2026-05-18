@@ -6,6 +6,7 @@ import { create } from "node:domain";
 
 const routerBooks = Router();
 
+/*
 routerBooks.get("/latest", async (req, res) => {
     //1 access req
     let limit = Number(req.query.limit) || 10;
@@ -38,6 +39,29 @@ routerBooks.get("/latest", async (req, res) => {
         });
     }
 });
+*/
+
+routerBooks.get("/latest", asyncHandler( async (req, res) => {
+    let limit = parseInt(req.query.limit, 10) || 10;
+    if (limit < 1) limit = 1;
+    if (limit > 50) limit = 50;
+    
+    const latestBooks = await prisma.books.findMany({
+        orderBy: {
+            created_at: "desc"
+        },
+        select: {
+            book_id: true,
+            title: true,
+            cover_url: true
+        },
+        take: limit
+    })
+    return res.status(200).json({
+        success: true,
+        data: latestBooks
+    });
+}));
 
 routerBooks.get("/:bookId", async (req, res) => {
     //1 access body and req
@@ -426,7 +450,7 @@ routerBooks.get("/", validateQuery, asyncHandler(async (req, res) => {
     })
 }));
 */
-
+/*
 routerBooks.get("/", validateQuery, asyncHandler(async (req, res) => {
     const {
         name,
@@ -550,7 +574,7 @@ routerBooks.get("/", validateQuery, asyncHandler(async (req, res) => {
     });
 })
 );
-
+*/
 
 routerBooks.get("/", validateQuery, asyncHandler( async (req, res) => {
     const { name, author, category, page = 1, limit = 25, sort = "created_at", order = "desc" } = req.query;
