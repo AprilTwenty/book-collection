@@ -4,6 +4,7 @@ import prisma from "../prisma/client.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import { create } from "node:domain";
 import AppError from "../utils/AppError.js";
+import { connect } from "node:http2";
 
 const routerBooks = Router();
 
@@ -737,7 +738,7 @@ routerBooks.get("/", validateQuery, asyncHandler( async (req, res) => {
 }))
     
 
-
+/*
 routerBooks.post("/", postBookValidation, async (req, res) => {
     //1 access req and body
     const { 
@@ -835,6 +836,116 @@ routerBooks.post("/", postBookValidation, async (req, res) => {
     }
 
 });
+*/
+
+routerBooks.post("/", postBookValidation, asyncHandler( async (req, res) => {
+    const {
+        title,
+        description,
+        isbn,
+        publisher,
+        published_year,
+        cover_url,
+        categories,
+        authors
+    } = req.body;
+
+    const createdBook = await prisma.$transaction(async (tx) => {
+        const collision = await tx.books.findUnique({
+            where: { isbn }
+        });
+        if (collision) {
+            throw new AppError(`This isbn already exist`, 409);
+        }
+        const connectBookCategories = {
+            book_categories: {
+                create: categories?.map((arr_category) => {
+                    if (typeof arr_category === "number") {
+                        return {
+                            categories: {
+                                connect: {
+                                    category_id: arr_category
+                                }
+                            }
+                        };
+                    } else if (typeof arr_category === "string") {
+                        return {
+                            categories: {
+                                connectOrCreate: {
+                                    where: { name: arr_category},
+                                    create: { name: arr_category}
+                                }
+                            }
+                        };
+                    }
+                }).filter(Boolean) || [],
+            }
+        };
+        const connectBookAuthors = {
+            book_authors: {
+                create: authors?.map((arr_author) => {
+                    if (typeof arr_author === "number") {
+                        return {
+                            authors: {
+                                connect: {
+                                    author_id: arr_author
+                                }
+                            }
+                        };
+                    } else if (typeof arr_author === "string") {
+                        return {
+                            authors: {
+                                connectOrCreate: {
+                                    where: { name: arr_author },
+                                    create: { name: arr_author }
+                                }
+                            }
+                        }
+                    }
+                }).filter(Boolean) || [],
+            }
+        };
+        const createdBook = await tx.books.create({
+            data: {
+                title,
+                description,
+                isbn,
+                publisher,
+                published_year,
+                cover_url,
+                ...connectBookCategories,
+                ...connectBookAuthors,
+            },
+            include: {
+                book_categories: {
+                    include: {
+                        categories: {
+                            select: {
+                                name: true
+                            }
+                        }
+                    }
+                },
+                book_authors: {
+                    include: {
+                        authors: {
+                            select: {
+                                name: true
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        return createdBook;
+    });
+    return res.status(201).json({
+        success: true,
+        message: "Create new book successfully",
+        data: createdBook
+    });
+}));
+
 routerBooks.put("/:bookId", postBookValidation, async (req, res) => {
     //1 access req
     const bookIdFromClient = req.params.bookId;
