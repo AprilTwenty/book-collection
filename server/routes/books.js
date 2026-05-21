@@ -855,8 +855,42 @@ routerBooks.post("/", postBookValidation, asyncHandler( async (req, res) => {
             where: { isbn }
         });
         if (collision) {
-            throw new AppError(`This isbn already exist`, 409);
+            throw new AppError(`ISBN already exists`, 409);
         }
+
+        const categoryIds = categories?.filter((item) => typeof item === "number") || [];
+        const foundCategories = await tx.categories.findMany({
+            where: {
+                category_id: {
+                    in : categoryIds
+                }
+            },
+            select: {
+                category_id: true
+            }
+        });
+        const foundCategoryIds = new Set(foundCategories.map((c) => c.category_id));
+        const missingCategoryIds = categoryIds.filter((id) => !foundCategoryIds.has(id));
+        if (missingCategoryIds.length > 0) {
+            throw new AppError(`Not found category id ${missingCategoryIds}`, 404);
+        }
+        const authorIds = authors?.filter((item) => typeof item === "number") || [];
+        const foundAuthors = await tx.authors.findMany({
+            where: {
+                author_id: {
+                    in: authorIds
+                }
+            },
+            select: {
+                author_id: true
+            }
+        });
+        const foundAuthorIds = new Set(foundAuthors.map((a) => a.author_id));
+        const missingAuthorIds = authorIds.filter((id) => !foundAuthorIds.has(id))
+        if (missingAuthorIds.length > 0) {
+            throw new AppError(`Not found author id ${missingAuthorIds}`, 404);
+        }
+
         const connectBookCategories = {
             book_categories: {
                 create: categories?.map((arr_category) => {
