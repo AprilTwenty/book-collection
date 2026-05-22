@@ -1,141 +1,114 @@
-📚 TextVerse: ระบบจัดการหนังสือออนไลน์
+# 📚 Book Collection
 
-Mini-project สำหรับจบคอร์สเรียน TechUp โดยมุ่งเน้นสร้างระบบจัดการหนังสือที่สามารถใช้งานจริงได้ในระดับหนึ่ง  
-ระบบรองรับการเพิ่มข้อมูลหนังสือ แนะนำหนังสือ แชร์รีวิว และบันทึกหนังสือลงในคอลเลกชันส่วนตัวของผู้ใช้
+A full-stack web application for managing books, authors, categories, and reviews.
 
-🎯 วัตถุประสงค์
-สร้างแพลตฟอร์มสำหรับคนรักการอ่าน โดยเฉพาะกลุ่มผู้ที่ชื่นชอบนิยาย เพื่อให้สามารถ:
-- เพิ่ม/แชร์หนังสือของตัวเอง
-- บันทึกหนังสือลงคอลเลกชัน
-- แสดงรีวิวและให้คะแนนหนังสือ
+This project was built to practice backend architecture, relational database design, REST API development, and full-stack integration using React, Express, Prisma, and PostgreSQL.
 
 ---
 
-🚀 วิธีการติดตั้งและใช้งาน
+## 🚀 Live Demo
 
-✅ ขั้นตอนการติดตั้ง
+### Frontend
+https://book-collection-front-end.vercel.app/
 
-1. Backend
-`bash
-cd /book-collection/server
-npm init -y
-npm install express nodemon bcrypt jsonwebtoken dotenv cors
-npm install prisma --save-dev
-npm install @prisma/client
-npm install swagger-jsdoc swagger-ui-express
-`
+### Backend API
+https://book-collection-psi.vercel.app/
 
-🔐 ตั้งค่าไฟล์ .env
-`env
-
-สำหรับใช้งานแบบ production (Supabase)
-DATABASE_URL="postgresql://postgres.wppbklkrintqpkgtnsxd:AJJc9xAoeO3PGeIo@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres" 
-SECRET_KEY = lTY7AOgyQ8+ViEIAjijB/3BDlmsoKxQzcaWK9nSMzkCRxMujN3vr6B+d1hAWh/RgXSSoVFvc5aTdIakWq0XQBKr30G6YLLLMWQj2rRj1BpYw54b3WupGzGM98SCYuB4WhcbuNMMj/49GYzHei/15vVVq908WLwTbWj3wGZeB7pjcS4oKYh2P+bOHSPIWWKtN/PdyvPVQYKggoNcvunQr0lLWl8X7U614B4aMQItCc4hcygK+Gtw+SuO+3eSyFbo2d3N5GQ6TPC3qqKhrmqCc/EqSa5lB0Th4yGb5y/vzOv64zZ+UcsFad37EoEpGdYnx1iQ4sRquWyEE0HWPk2LjAQ==
-
-สำหรับทดลองแบบ localhost
-DATABASEURL="postgresql://postgres:<password>@localhost:5432/bookcollection?schema=public"
-SECRET_KEY="testsecret"
-`
-
-`bash
-npx prisma generate
-npx prisma migrate dev
-`
-
-2. Frontend
-`bash
-cd /book-collection/client
-npm install
-npm install react-router-dom axios react-slick slick-carousel
-`
+> ⚠️ The backend is hosted on a free-tier server.  
+> The first request may take a few seconds due to cold starts.
 
 ---
 
-🧪 การเปิดใช้งานระบบ
-`bash
+## 🔑 Demo Account
 
-Backend
-cd /book-collection/server
-npm run start
+You can test the application using this demo account:
 
+Username: april
+Password: 12345678
+
+Or create your own account directly from the website.
+
+✨ Features
+  - User authentication system
+  - Book CRUD operations
+  - Author and category relationships
+  - Book review and rating system
+  - Pagination and query filtering
+  - RESTful API structure
+  - Validation middleware
+  - Relational database design with Prisma ORM
+
+🛠 Tech Stack
 Frontend
-cd /book-collection/client
-npm run dev
-`
+  - React
+  - Axios
+  - React Router
+Backend
+  - Node.js
+  - Express.js
+  - Prisma ORM
+Database
+  - PostgreSQL
+Deployment
+  - Vercel
+  - Supabase
 
-Swagger API Docs: http://localhost:4000/api-docs
+📂 Project Structure
 
----
-
-🔧 เทคโนโลยีที่ใช้ (Tech Stack)
-
-| Layer     | Technology                |
-|-----------|---------------------------|
-| Frontend  | React, Axios, CSS         |
-| Backend   | Node.js, Express, Prisma  |
-| Database  | PostgreSQL (via Supabase) |
-| API Docs  | Swagger                   |
-
----
-
-📂 โครงสร้างโปรเจกต์ (บางส่วน)
-
-`plaintext
 book-collection/
-├── client/          # React frontend
+├── client/
 │   ├── components/
 │   ├── pages/
+│   ├── services/
 │   └── ...
-├── server/          # Express backend
-│   ├── routes/
-│   ├── controllers/
+│
+├── server/
+│   ├── middleware/
 │   ├── prisma/
-│   └── .env
+│   ├── routes/
+│   ├── utils/
+│   └── ...
+│
 └── README.md
-`
 
----
+🔗 API Examples
+Get all books
+  GET /books
+Get book by ID
+  GET /books/:bookId
+Create new review
+  POST /reviews
 
-🔐 ฟีเจอร์สำคัญ
+⚙️ Local Installation
+1. Clone Repository
+  git clone https://github.com/AprilTwenty/book-collection.git
+2. Install Backend
+  cd server
+  npm install
+3. Configure Environment Variables
+Create .env file inside /server
+  DATABASE_URL=your_database_url
+  SECRET_KEY=your_secret_key
+4. Prisma Setup
+  npx prisma generate
+  npx prisma migrate dev
+5. Run Backend
+  npm run dev
+6. Install Frontend
+  cd ../client
+  npm install
+7. Run Frontend
+  npm run dev
 
-- ระบบสมัครสมาชิกและเข้าสู่ระบบ (Auth)
-- แนะนำหนังสือและเพิ่มหนังสือลงระบบ
-- ค้นหาและจัดหมวดหมู่หนังสือ
-- การแบ่งหน้า (Pagination)
-- รีวิว + ให้คะแนน
 
----
+📌 Future Improvements
+  - Image upload support
+  - Search and sorting system
+  - Role-based authorization
+  - Unit testing
+  - Docker support
+  - API documentation improvements
 
-📡 ตัวอย่าง API
-
-`http
-POST /auth/register
-{
-  "username": "test1",
-  "password": "testtest",
-  "email": "test@test.com"
-}
-
-POST /auth/login
-{
-  "username": "test1",
-  "password": "testtest"
-}
-`
-
----
-
-⚠️ Known Issues & Troubleshooting
-
-- หากเชื่อมต่อ Supabase ไม่สำเร็จ ลองใช้งาน Prisma เวอร์ชัน 6.11.1
-
----
-
-🙋‍♂️ ผู้พัฒนา & ขอบคุณ
-
-Developed by Atchariya Tongyoo
-
-ขอบคุณแหล่งข้อมูลจาก:
-- Prisma Docs
-- Supabase Community
-- Swagger
+👨‍💻 Author
+GitHub:
+  https://github.com/AprilTwenty
